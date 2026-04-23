@@ -8,11 +8,11 @@
 
 # hiveram-dist
 
-Distribution package for [Hiveram](https://hiveram.com) — agent coordination layer. Pre-built binaries, skills, and install script.
+Distribution package for [Hiveram](https://hiveram.com) — agent coordination and execution intelligence. Pre-built workledger binaries, skills, and install script.
 
 ## What this is
 
-Pre-built binaries, essential skills, and an install script that bootstraps any workstation with a working workledger setup: binary on PATH, MCP server configured for Claude Code, HTTP API access, and cross-machine memory sync.
+Pre-built binaries, essential skills, and an install script that bootstraps any workstation with a working Hiveram/workledger setup: binary on PATH, MCP server configured for Claude Code, HTTP API access, and cross-machine memory sync.
 
 ## What this is NOT
 
@@ -23,7 +23,7 @@ Pre-built binaries, essential skills, and an install script that bootstraps any 
 ## Quick install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ppiankov/hiveram-dist/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/install.sh | bash
 ```
 
 This will:
@@ -31,7 +31,18 @@ This will:
 2. Install 5 essential Claude Code skills
 3. Configure the MCP server in Claude Code settings
 4. Prompt for your Neon DSN and API key
-5. Verify everything works
+5. Verify the binary, skills, and MCP wiring
+
+Package managers:
+
+```bash
+# Homebrew
+brew install obstalabs/tap/workledger
+
+# Scoop
+scoop bucket add obstalabs https://github.com/obstalabs/scoop-bucket
+scoop install workledger
+```
 
 ## Manual install
 
@@ -40,13 +51,13 @@ If you prefer not to pipe to bash:
 ```bash
 # 1. Download the tarball for your platform
 # macOS Apple Silicon
-curl -LO https://github.com/ppiankov/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_darwin_arm64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_darwin_arm64.tar.gz
 
 # macOS Intel
-curl -LO https://github.com/ppiankov/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_darwin_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_darwin_amd64.tar.gz
 
 # Linux amd64
-curl -LO https://github.com/ppiankov/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_linux_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_linux_amd64.tar.gz
 
 # 2. Verify checksum
 sha256sum -c checksums.txt
@@ -60,7 +71,7 @@ chmod +x /usr/local/bin/workledger
 for skill in workledger write-wo load-context wrapup save-memory; do
     mkdir -p ~/.claude/skills/$skill
     curl -fsSL -o ~/.claude/skills/$skill/SKILL.md \
-        "https://raw.githubusercontent.com/ppiankov/hiveram-dist/main/skills/$skill/SKILL.md"
+        "https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/skills/$skill/SKILL.md"
 done
 
 # 5. Configure secrets
@@ -91,11 +102,14 @@ echo '[ -f ~/.workledger/api-key.env ] && source ~/.workledger/api-key.env' >> ~
 | macOS | Intel (amd64) | Supported |
 | Linux | amd64 | Supported |
 | Linux | arm64 | Supported |
+| Windows | amd64 | Supported via Scoop |
+| Windows | arm64 | Supported via Scoop |
 
 ## Prerequisites
 
 - [Claude Code](https://claude.ai/claude-code) installed
-- A workledger account (Neon DSN + API key)
+- A Hiveram Pro trial or license key for commercial CLI use
+- A Hiveram/workledger API endpoint and API key for remote shared state
 
 ## Verify installation
 
@@ -105,7 +119,13 @@ After install, open a new terminal and run:
 workledger version
 ```
 
-Then start Claude Code in any project and run `/load-context` to verify the full stack.
+Then activate your trial or license key:
+
+```bash
+workledger activate <your-license-key>
+```
+
+Start Claude Code in any project and run `/load-context` to verify the full stack.
 
 ## License
 

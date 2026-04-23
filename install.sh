@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # hiveram installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/ppiankov/hiveram-dist/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/install.sh | bash
 
-REPO="ppiankov/hiveram-dist"
+REPO="obstalabs/hiveram-dist"
 BINARY_NAME="workledger"
 INSTALL_DIR="${WORKLEDGER_INSTALL_DIR:-/usr/local/bin}"
 SKILLS_DIR="$HOME/.claude/skills"
@@ -54,7 +54,7 @@ latest_version() {
 # --- phase 1: binary ---
 
 install_binary() {
-    info "Installing workledger binary"
+    info "Installing Hiveram workledger binary"
 
     local platform version tarball url tmpdir
     platform="$(detect_platform)"
@@ -134,7 +134,7 @@ configure_connection() {
     # Connection mode: URL (recommended) or DSN (advanced)
     if [ -z "${WORKLEDGER_URL:-}" ] && [ -z "${WORKLEDGER_DSN:-}" ]; then
         echo ""
-        echo "How will you connect to workledger?"
+        echo "How will you connect to Hiveram/workledger?"
         echo "  1) HTTP API (recommended) -- needs URL + API key"
         echo "  2) Direct database -- needs PostgreSQL DSN"
         echo "  3) Local only -- SQLite, no remote connection"
@@ -145,7 +145,7 @@ configure_connection() {
         case "$mode" in
             1)
                 echo ""
-                echo "Enter your workledger server URL (WORKLEDGER_URL)."
+                echo "Enter your Hiveram/workledger server URL (WORKLEDGER_URL)."
                 echo "Example: https://wl-yourorg-prod.fly.dev"
                 printf "URL: "
                 read -r wl_url < "$input" || wl_url=""
@@ -325,7 +325,7 @@ verify() {
 
     echo ""
     if $ok; then
-        info "Installation complete. Start Claude Code -- workledger MCP tools are ready."
+        info "Installation complete. Run 'workledger activate <key>' for commercial CLI use, then start Claude Code."
     else
         warn "Installation completed with warnings. Review the messages above."
     fi
