@@ -135,8 +135,8 @@ configure_connection() {
     if [ -z "${WORKLEDGER_URL:-}" ] && [ -z "${WORKLEDGER_DSN:-}" ]; then
         echo ""
         echo "How will you connect to Hiveram/workledger?"
-        echo "  1) HTTP API (recommended) -- needs URL + API key"
-        echo "  2) Direct database -- needs PostgreSQL DSN"
+        echo "  1) HTTP API (recommended) -- customer-hosted or Obsta-managed URL + API key"
+        echo "  2) Direct database (advanced) -- self-hosted or admin PostgreSQL DSN"
         echo "  3) Local only -- SQLite, no remote connection"
         printf "Choice [1]: "
         read -r mode < "$input" || mode=""
@@ -169,7 +169,7 @@ configure_connection() {
                 ;;
             2)
                 echo ""
-                echo "Enter your Neon PostgreSQL connection string (WORKLEDGER_DSN)."
+                echo "Enter your PostgreSQL connection string (WORKLEDGER_DSN) for self-hosted or admin use."
                 echo "Format: postgresql://user:pass@host/dbname?sslmode=require"
                 printf "DSN: "
                 read -r dsn < "$input" || dsn=""
