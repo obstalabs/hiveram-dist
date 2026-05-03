@@ -12,7 +12,7 @@ Distribution package for [Hiveram](https://hiveram.com) — agent coordination a
 
 ## What this is
 
-Pre-built binaries, a small public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram/workledger setup: binary on PATH, MCP server configured for Claude Code by default, and optional remote API connectivity.
+Pre-built binaries, a small public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram/workledger setup: binary on PATH, MCP server configured for Claude Code by default, and optional remote API connectivity to either a customer-hosted or Obsta-managed deployment.
 
 Hiveram/workledger itself is not Claude-only. The same MCP server and CLI are
 usable from any compatible agent surface, including Claude Code, Codex,
@@ -26,6 +26,16 @@ today.
 - Not a framework or SDK — this is an installer
 - Not a replacement for reading the docs at [hiveram.com](https://hiveram.com)
 
+## Deployment modes
+
+Hiveram can run in three common custody modes:
+
+- **Local** — SQLite on your own machine, no remote ledger service required
+- **Customer-hosted** — you run the Hiveram/workledger API and Postgres in your own environment, then connect with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`
+- **Obsta-managed** — Obsta runs the remote service for you, and you connect to that endpoint with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`
+
+Direct `WORKLEDGER_DSN` access is supported for self-hosted and admin workflows, but it is not the normal operator path for commercial use.
+
 ## Quick install
 
 ```bash
@@ -36,7 +46,7 @@ This will:
 1. Download the `workledger` binary for your platform
 2. Install 5 public-safe Claude Code skills
 3. Configure the MCP server in Claude Code settings
-4. Prompt for your Hiveram/workledger connection details
+4. Prompt for your Hiveram/workledger connection details and custody mode
 5. Verify the binary, skills, and MCP wiring
 
 Package managers:
@@ -80,14 +90,17 @@ for skill in workledger write-wo load-context wrapup save-memory; do
         "https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/skills/$skill/SKILL.md"
 done
 
-# 5. Configure secrets
+# 5. Configure connection details
 mkdir -p ~/.workledger
 cat > ~/.workledger/api-key.env << 'EOF'
-export WORKLEDGER_DSN='postgresql://...'
+export WORKLEDGER_URL='https://workledger.example.com'
 export WORKLEDGER_API_KEY='wl_...'
 EOF
 chmod 600 ~/.workledger/api-key.env
 echo '[ -f ~/.workledger/api-key.env ] && source ~/.workledger/api-key.env' >> ~/.zshrc
+
+# Optional: direct Postgres access for self-hosted or admin workflows only
+# export WORKLEDGER_DSN='postgresql://...'
 ```
 
 ## Included skills
@@ -143,7 +156,8 @@ configuration.
 
 - [Claude Code](https://claude.ai/claude-code) installed for the automated setup path
 - A Hiveram Pro trial or license key for commercial CLI use
-- A Hiveram/workledger API endpoint and API key for remote shared state
+- Either a Hiveram/workledger API endpoint plus API key for shared remote state, or a local-only SQLite evaluation flow
+- Direct `WORKLEDGER_DSN` access only for self-hosted and admin setups
 
 ## Verify installation
 
