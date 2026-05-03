@@ -1,81 +1,95 @@
 ---
 name: workledger
-description: Use workledger to query, create, update, and relate work orders
-argument-hint: "[project] [command or goal]"
+description: Use workledger to inspect, plan, and update structured work orders through MCP, CLI, or HTTP API without relying on flat backlog files.
+argument-hint: "[project] [goal]"
 ---
 
-Use workledger for: $ARGUMENTS
+Use this skill when the user wants to inspect work orders, create or update
+them, understand blockers or dependencies, or choose what to work on next.
 
-Use this skill when the user asks about work orders, backlog state, WO lookup, duplicate checks, dependency checks, status updates, notes, or general workledger usage.
+## Pick the safest access path
 
-## Access tiers (use in order)
+1. Prefer MCP when it is available.
+2. Otherwise use the `workledger` CLI.
+3. Use the HTTP API only when CLI or MCP is unavailable.
+4. Use flat backlog files only as a last-resort fallback.
 
-1. **Tier 1 (MCP):** if workledger MCP is available, use MCP tools directly (workledger_list_wos, workledger_get_wo, workledger_create_wo, etc.)
-2. **Tier 2 (CLI):** prefer `workledger` if on `PATH`, otherwise `~/go/bin/workledger`
-3. **Tier 3 (HTTP API):** if CLI is unavailable or times out (Neon free tier cold start ~5-10s):
-   - Load key: `source ~/.workledger/api-key.env`
-   - Base URL: `${WORKLEDGER_URL}/api/v1`
-   - Auth: `Authorization: Bearer $WORKLEDGER_API_KEY`
-   - Use `--max-time 10` on all curl calls
-   - Key endpoints:
-     - `GET /wo?project=<p>&status=open` -- list WOs
-     - `GET /wo/<project>/<id>` -- get single WO
-     - `POST /wo` -- create WO (JSON body: project, title, priority, tags, sections)
-     - `PATCH /wo/<project>/<id>` -- update WO (JSON body: status, sections, etc.)
-     - `POST /wo/<project>/<id>/note` -- add note (JSON body: content)
-     - `GET /search?q=<query>&project=<p>` -- search WOs
-     - `GET /stats?project=<p>` -- counts by status/priority
-     - `GET /wo/unclaimed?project=<p>` -- unclaimed WOs
-     - `PUT /blob/<project>/<key>` -- push memory/context blob
-     - `GET /blob/<project>/<key>` -- pull memory/context blob
-     - `GET /blob/<project>` -- list blobs
-4. **Tier 4 (flat file):** if all above are unavailable, fall back to `docs/work-orders.md`
+## Authentication rules
 
-## Backend verification
+- The commercial CLI uses a Hiveram license saved by `workledger activate`.
+- The binary should read the saved license automatically from
+  `~/.hiveram/license`.
+- The HTTP API uses `WORKLEDGER_API_KEY`, not the `ol_` license key.
+- Never print, paste, summarize, or log full license keys or API keys.
 
-The authoritative store is Neon PostgreSQL via `WORKLEDGER_DSN`. The CLI silently falls back to local SQLite if DSN is unset.
+## Core read flows
 
-**Before any write operation:**
-1. Verify DSN is set: `echo "${WORKLEDGER_DSN:0:10}"` -- must show `postgresql`
-2. If empty, STOP and tell the user to set WORKLEDGER_DSN
-3. Read operations are safe against either backend but SQLite results may be stale
+- Project list: `workledger projects`
+- Queue view: `workledger list <project> --status open`
+- Full WO: `workledger get <project> <id>`
+- Rich WO view: `workledger detail <project> <id>`
+- Duplicate check: `workledger search "<keywords>" --project <project>`
+- Blockers: `workledger blocked <project>`
+- Dependency tree: `workledger deps-tree <project> <id>`
 
-## Common commands
+## Creation and updates
 
-### Project overview
+- Search before creating a new WO.
+- Create with concrete scope:
 
-- `workledger list <project> --status open`
-- `workledger stats [project]`
-- `workledger blocked <project>`
+```bash
+workledger create <project> \
+  --title "Short imperative title" \
+  --priority P1 \
+  --complexity C2 \
+  --file internal/example/file.go \
+  --target type=invariant,id=context-routing \
+  --section problem="What is wrong and why it matters" \
+  --section scope="What to change and what not to change" \
+  --section acceptance="Concrete completion criteria" \
+  --section expected_output=diff
+```
 
-### Lookup
+- Update status or metadata:
 
-- `workledger get <project> <id>`
-- `workledger detail <project> <id>` -- WO plus notes, relationships, history
-- `workledger search "<query>" --project <project>`
+```bash
+workledger update <project> <id> --status done
+workledger update <project> <id> --target type=file_cluster,id=internal/router/guard.go
+workledger note <project> <id> "Completed in <sha>: short summary"
+```
 
-### Create and update
+## Planning and grouping
 
-- `workledger create <project> --title "<title>" --priority P1 [--tags tag1,tag2] [--section summary="..."]`
-- `workledger update <project> <id> --status done`
-- `workledger note <project> <id> "Completed: <SHA> -- <summary>"`
+- Full queue planning: `workledger queue-plan <project>`
+- Target-centered cohort: `workledger target-plan <project> --wo WO-23`
+- Session grouping: `workledger dispatch <project>`
+- Best next executable group: `workledger next <project>`
 
-### Relationships
+Useful flags:
 
-- `workledger relate <from-project> <from-id> depends_on <to-project> <to-id>`
-- `workledger deps <project> <id>` -- transitive dependency chain
+- `--json` for machine-readable output
+- `--model sonnet|opus|codex|haiku` to filter by execution tier
+- `--execute` on `dispatch` or `next` to write task files for execution
 
-### Memory and context sync
+## HTTP API fallback
 
-- `workledger memory put <project> <key> --file <path>`
-- `workledger memory pull <project> <key> --file <path>`
-- `workledger memory list <project>`
-- `workledger context-put <project> --file docs/context.txt`
-- `workledger context-pull <project> --file docs/context.txt`
+If CLI or MCP is unavailable and `WORKLEDGER_URL` plus `WORKLEDGER_API_KEY`
+are already configured:
 
-## Rules
+- `GET /api/v1/wo/{project}/{id}`
+- `GET /api/v1/search?q=<query>&project=<project>`
+- `GET /api/v1/projects/{project}/queue-plan`
+- `GET /api/v1/projects/{project}/target-plan?wo_id=<id>`
+- `POST /api/v1/wo`
+- `PATCH /api/v1/wo/{project}/{id}`
+- `POST /api/v1/wo/{project}/{id}/note`
 
-- Always run `search` before creating a WO to avoid duplicates
-- When marking a WO done, add a note with the commit SHA
-- Workledger is the source of truth -- flat files are fallback views
-- NEVER run `workledger import` for normal WO creation
+Do not echo secret-bearing environment variables while checking API access.
+
+## Operator rules
+
+- Search first, then create.
+- Prefer structured fields over freeform notes when a field exists.
+- When a WO is done, attach commit evidence in a note.
+- Treat `repo_warning` as a real signal that project metadata needs cleanup.
+- Do not use `workledger import` for normal day-to-day WO authoring.

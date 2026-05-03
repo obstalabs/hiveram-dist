@@ -8,15 +8,15 @@
 
 # hiveram-dist
 
-Distribution package for [Hiveram](https://hiveram.com) — agent coordination and execution intelligence. Pre-built workledger binaries, skills, and install script.
+Distribution package for [Hiveram](https://hiveram.com) — agent coordination and execution intelligence. Pre-built `workledger` binaries, a public-safe skill pack, and an install script.
 
 ## What this is
 
-Pre-built binaries, essential skills, and an install script that bootstraps any workstation with a working Hiveram/workledger setup: binary on PATH, MCP server configured for Claude Code, HTTP API access, and cross-machine memory sync.
+Pre-built binaries, a small public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram/workledger setup: binary on PATH, MCP server configured for Claude Code, and optional remote API connectivity.
 
 ## What this is NOT
 
-- Not the source code — that lives in a private repo
+- Not the source code — that lives in the separate `workledger` source repository
 - Not a framework or SDK — this is an installer
 - Not a replacement for reading the docs at [hiveram.com](https://hiveram.com)
 
@@ -27,10 +27,10 @@ curl -fsSL https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/install
 ```
 
 This will:
-1. Download the workledger binary for your platform
-2. Install 5 essential Claude Code skills
+1. Download the `workledger` binary for your platform
+2. Install 5 public-safe Claude Code skills
 3. Configure the MCP server in Claude Code settings
-4. Prompt for your Neon DSN and API key
+4. Prompt for your Hiveram/workledger connection details
 5. Verify the binary, skills, and MCP wiring
 
 Package managers:
@@ -51,13 +51,13 @@ If you prefer not to pipe to bash:
 ```bash
 # 1. Download the tarball for your platform
 # macOS Apple Silicon
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_darwin_arm64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.10.2/workledger_0.10.2_darwin_arm64.tar.gz
 
 # macOS Intel
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_darwin_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.10.2/workledger_0.10.2_darwin_amd64.tar.gz
 
 # Linux amd64
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.7.7/workledger_0.7.7_linux_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.10.2/workledger_0.10.2_linux_amd64.tar.gz
 
 # 2. Verify checksum
 sha256sum -c checksums.txt
@@ -86,13 +86,16 @@ echo '[ -f ~/.workledger/api-key.env ] && source ~/.workledger/api-key.env' >> ~
 
 ## Included skills
 
+These shipped skills are intentionally public-safe. They teach how to use the
+product surfaces without exposing Obsta's internal operating workflow.
+
 | Skill | Command | What it does |
 |-------|---------|--------------|
-| workledger | `/workledger` | Query, create, update work orders |
-| write-wo | `/write-wo` | Create work orders from feature briefs |
-| load-context | `/load-context` | Pull memory and WOs at session start |
-| wrapup | `/wrapup` | Push memory, mark WOs done, commit |
-| save-memory | `/save-memory` | Save and sync memory mid-session |
+| workledger | `/workledger` | Query, create, update, group, and inspect work orders |
+| write-wo | `/write-wo` | Turn a feature brief into one or more well-scoped work orders |
+| load-context | `/load-context` | Orient an agent on the current repo and open work orders |
+| wrapup | `/wrapup` | Close out completed work orders and record delivery evidence |
+| save-memory | `/save-memory` | Save durable project context through workledger memory surfaces |
 
 ## Platforms
 
@@ -126,6 +129,9 @@ workledger activate <your-license-key>
 ```
 
 Start Claude Code in any project and run `/load-context` to verify the full stack.
+
+The canonical public product skill for `workledger` is also published in the
+source repository at [docs/SKILL.md](https://github.com/obstalabs/workledger/blob/main/docs/SKILL.md).
 
 ## License
 

@@ -85,7 +85,7 @@ install_binary() {
 # --- phase 2: skills ---
 
 install_skills() {
-    info "Installing skills to ${SKILLS_DIR}"
+    info "Installing public-safe skills to ${SKILLS_DIR}"
 
     local tmpdir skills
     tmpdir="$(mktemp -d)"
@@ -106,7 +106,7 @@ install_skills() {
     done
 
     rm -rf "$tmpdir"
-    info "Installed ${#skills[@]} skills"
+    info "Installed ${#skills[@]} public-safe skills"
 }
 
 # --- phase 3: connection setup ---

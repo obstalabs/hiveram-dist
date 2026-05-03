@@ -1,33 +1,42 @@
 ---
 name: save-memory
-description: Save memory files locally and push to workledger for cross-machine sync
-argument-hint:
+description: Save durable project context through workledger memory and context surfaces without leaking secrets.
+argument-hint: "[project]"
 ---
 
-Save current memory state and sync to workledger. $ARGUMENTS
+Use this skill when the user wants to preserve stable project context that
+should survive beyond the current session.
 
-## Steps
+## Save only durable context
 
-1. **Update local memory** -- review the current conversation for new stable patterns, conventions, or decisions:
-   - Only save patterns confirmed across multiple interactions
-   - Do not save session-specific state (that belongs in context)
-   - Do not duplicate existing entries -- update them instead
-   - Write to `~/.claude/projects/<project-key>/memory/` using memory frontmatter format
-   - Update `MEMORY.md` index if new topic files were created
-   - If nothing new to save, report "No new memory to save" and skip to step 2
+Good candidates:
 
-2. **Push to workledger** -- sync memory files using the three-tier fallback:
-   - Read MEMORY.md and all topic files from the local memory directory
-   - **Tier 1 (MCP):** for each file, call `workledger_memory_put(project="<project>", key="memory/<filename>", content=<file contents>)`
-   - **Tier 2 (HTTP API):** if MCP is unavailable:
-     - `source ~/.workledger/api-key.env`
-     - `curl -s --max-time 10 -X PUT -H "Authorization: Bearer $WORKLEDGER_API_KEY" -H "Content-Type: application/octet-stream" --data-binary @<local-path> '${WORKLEDGER_URL}/api/v1/blob/<project>/memory/<filename>'`
-   - **Tier 3 (local only):** if both are unavailable, report "Memory saved locally only -- workledger sync skipped"
-   - Show: `Pushed N memory files to workledger`
+- stable architecture notes
+- durable operating constraints
+- important repo-specific conventions
+- long-lived investigation findings
+
+Do not save:
+
+- secrets
+- raw credentials
+- one-off debugging chatter
+- ephemeral session state that belongs in a short-lived note instead
+
+## Suggested flow
+
+1. Write or update a local context file with the durable facts.
+2. Push it into workledger using memory or context surfaces:
+
+```bash
+workledger memory put <project> <key> --file <path>
+workledger context-put <project> --file <path>
+```
+
+3. Confirm the stored artifact can be listed or read back if needed.
 
 ## Rules
 
-- This is a lightweight sync -- no commit, no push, no context save
-- Use `/wrapup` instead when ending a session
-- Do not save ephemeral debugging state -- that belongs in context
-- Keep MEMORY.md under 200 lines -- move detail to topic files
+- Never print secret-bearing files while saving context.
+- Keep saved context concise and durable.
+- Prefer a WO note instead when the information only matters to one delivery slice.
