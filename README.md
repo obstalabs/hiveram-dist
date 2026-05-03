@@ -173,4 +173,4 @@ source repository at [docs/SKILL.md](https://github.com/obstalabs/workledger/blo
 
 ## License
 
-[Business Source License 1.1](LICENSE) — use freely for internal and self-hosted deployments. See LICENSE for details.
+Proprietary. This repository distributes Hiveram binaries, installer assets, and public-safe skills only. The Hiveram/workledger source code is private and is not distributed from this repository. See [LICENSE](LICENSE) for the distribution terms.
