@@ -12,7 +12,13 @@ Distribution package for [Hiveram](https://hiveram.com) — agent coordination a
 
 ## What this is
 
-Pre-built binaries, a small public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram/workledger setup: binary on PATH, MCP server configured for Claude Code, and optional remote API connectivity.
+Pre-built binaries, a small public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram/workledger setup: binary on PATH, MCP server configured for Claude Code by default, and optional remote API connectivity.
+
+Hiveram/workledger itself is not Claude-only. The same MCP server and CLI are
+usable from any compatible agent surface, including Claude Code, Codex,
+OpenCode, Cursor, Cline, Qwen, and other MCP-capable clients. The installer
+automates Claude Code first because it is the safest default bootstrap path
+today.
 
 ## What this is NOT
 
@@ -89,6 +95,10 @@ echo '[ -f ~/.workledger/api-key.env ] && source ~/.workledger/api-key.env' >> ~
 These shipped skills are intentionally public-safe. They teach how to use the
 product surfaces without exposing Obsta's internal operating workflow.
 
+The bundled skill files are optimized for Claude Code installation. The command
+surface they describe is agent-neutral, and the same `workledger` MCP/CLI/API
+flows work from other agent environments.
+
 | Skill | Command | What it does |
 |-------|---------|--------------|
 | workledger | `/workledger` | Query, create, update, group, and inspect work orders |
@@ -108,9 +118,30 @@ product surfaces without exposing Obsta's internal operating workflow.
 | Windows | amd64 | Supported via Scoop |
 | Windows | arm64 | Supported via Scoop |
 
+## Agent support
+
+Hiveram/workledger is designed for multi-agent use:
+
+- Claude Code
+- Codex
+- OpenCode
+- Cursor
+- Cline
+- Qwen
+- other MCP-capable agent clients
+
+Today this repo ships:
+
+- automatic Claude Code MCP setup
+- a public-safe Claude skill pack
+- the canonical `workledger` binary and API/MCP surface used by all agents
+
+Other agent clients can use the same binary and MCP server with their own local
+configuration.
+
 ## Prerequisites
 
-- [Claude Code](https://claude.ai/claude-code) installed
+- [Claude Code](https://claude.ai/claude-code) installed for the automated setup path
 - A Hiveram Pro trial or license key for commercial CLI use
 - A Hiveram/workledger API endpoint and API key for remote shared state
 
@@ -128,7 +159,14 @@ Then activate your trial or license key:
 workledger activate <your-license-key>
 ```
 
-Start Claude Code in any project and run `/load-context` to verify the full stack.
+Start Claude Code in any project and run `/load-context` to verify the default
+installed skill pack.
+
+If you use another agent client, verify that it can:
+
+1. run `workledger version`
+2. connect to the `workledger serve --mcp` server
+3. read project state through CLI or MCP
 
 The canonical public product skill for `workledger` is also published in the
 source repository at [docs/SKILL.md](https://github.com/obstalabs/workledger/blob/main/docs/SKILL.md).
