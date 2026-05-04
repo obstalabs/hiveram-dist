@@ -31,10 +31,15 @@ today.
 Hiveram can run in three common custody modes:
 
 - **Local** — SQLite on your own machine, no remote ledger service required
-- **Customer-hosted** — you run the Hiveram/workledger API and Postgres in your own environment, then connect with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`
+- **Customer-hosted** — you run the Hiveram/workledger API and PostgreSQL in your own environment, then connect operators with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`
 - **Obsta-managed** — Obsta runs the remote service for you, and you connect to that endpoint with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`
 
 Direct `WORKLEDGER_DSN` access is supported for self-hosted and admin workflows, but it is not the normal operator path for commercial use.
+
+If you want to keep the ledger in your own infrastructure, start with the
+[self-hosted deployment guide](docs/self-hosted.md). It explains the normal
+remote path, backup expectations, and how Hiveram's PostgreSQL support boundary
+maps to the authoritative [workledger support matrix](https://github.com/obstalabs/workledger/blob/main/docs/postgres-support.md).
 
 ## Quick install
 

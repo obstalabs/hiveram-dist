@@ -147,6 +147,7 @@ configure_connection() {
                 echo ""
                 echo "Enter your Hiveram/workledger server URL (WORKLEDGER_URL)."
                 echo "Example: https://wl-yourorg-prod.fly.dev"
+                echo "Customer-hosted deployments should keep operators on URL + API key; see docs/self-hosted.md for the full setup and backup posture."
                 printf "URL: "
                 read -r wl_url < "$input" || wl_url=""
                 if [ -n "$wl_url" ]; then
@@ -171,6 +172,7 @@ configure_connection() {
                 echo ""
                 echo "Enter your PostgreSQL connection string (WORKLEDGER_DSN) for self-hosted or admin use."
                 echo "Format: postgresql://user:pass@host/dbname?sslmode=require"
+                echo "Use DSN mode for server setup, migrations, and admin workflows. Day-to-day operator use should prefer URL + API key."
                 printf "DSN: "
                 read -r dsn < "$input" || dsn=""
                 if [ -n "$dsn" ]; then
