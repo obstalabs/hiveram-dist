@@ -99,7 +99,7 @@ done
 mkdir -p ~/.workledger
 cat > ~/.workledger/api-key.env << 'EOF'
 export WORKLEDGER_URL='https://workledger.example.com'
-export WORKLEDGER_API_KEY='wl_...'
+export WORKLEDGER_API_KEY='ol_sk_...'
 EOF
 chmod 600 ~/.workledger/api-key.env
 echo '[ -f ~/.workledger/api-key.env ] && source ~/.workledger/api-key.env' >> ~/.zshrc

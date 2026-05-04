@@ -19,7 +19,7 @@ them, understand blockers or dependencies, or choose what to work on next.
 - The commercial CLI uses a Hiveram license saved by `workledger activate`.
 - The binary should read the saved license automatically from
   `~/.hiveram/license`.
-- The HTTP API uses `WORKLEDGER_API_KEY`, not the `ol_` license key.
+- The HTTP API uses `WORKLEDGER_API_KEY`. Hosted bearer tokens may be `ol_`-prefixed, but they are still API credentials, not the saved CLI license from `~/.hiveram/license`.
 - Never print, paste, summarize, or log full license keys or API keys.
 
 ## Core read flows

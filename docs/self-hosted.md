@@ -32,7 +32,7 @@ The normal team path is:
 
 1. PostgreSQL 15+ in your environment
 2. `workledger serve --http` running against that database
-3. Agent clients configured with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`
+3. Agent clients configured with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY` (the bearer token may be `ol_`-prefixed)
 
 Keep raw `WORKLEDGER_DSN` access for setup, migrations, smoke validation, and
 admin operations. Most operators should never need a database connection string.
@@ -74,7 +74,7 @@ Operators and agent clients should use the HTTPS API path, not the raw DSN:
 
 ```bash
 export WORKLEDGER_URL='https://workledger.example.com'
-export WORKLEDGER_API_KEY='wl_...'
+export WORKLEDGER_API_KEY='ol_sk_...'
 ```
 
 Direct DSN access is still valid for admin tasks such as first bootstrap,
