@@ -39,7 +39,7 @@ Direct `WORKLEDGER_DSN` access is supported for self-hosted and admin workflows,
 If you want to keep the ledger in your own infrastructure, start with the
 [self-hosted deployment guide](docs/self-hosted.md). It explains the normal
 remote path, backup expectations, and how Hiveram's PostgreSQL support boundary
-maps to the authoritative [workledger support matrix](https://github.com/obstalabs/workledger/blob/main/docs/postgres-support.md).
+maps to the public [PostgreSQL support matrix](docs/postgres-support.md).
 
 ## Quick install
 
@@ -187,8 +187,7 @@ If you use another agent client, verify that it can:
 2. connect to the `workledger serve --mcp` server
 3. read project state through CLI or MCP
 
-The canonical public product skill for `workledger` is also published in the
-source repository at [docs/SKILL.md](https://github.com/obstalabs/workledger/blob/main/docs/SKILL.md).
+The canonical public product skill for `workledger` is bundled in this distribution at [skills/workledger/SKILL.md](skills/workledger/SKILL.md).
 
 ## License
 

@@ -18,10 +18,9 @@ deployments are a normal supported path.
 
 ## Support boundary
 
-Hiveram supports standard PostgreSQL. The authoritative support contract lives
-in the Workledger source repository:
+Hiveram supports standard PostgreSQL. The public support contract for customer-hosted deployments is here:
 
-- [PostgreSQL support matrix](https://github.com/obstalabs/workledger/blob/main/docs/postgres-support.md)
+- [PostgreSQL support matrix](postgres-support.md)
 
 Use that support matrix to distinguish officially supported, tested,
 best-effort, and unsupported environments before you promise compatibility.
