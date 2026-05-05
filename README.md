@@ -72,13 +72,13 @@ If you prefer not to pipe to bash:
 ```bash
 # 1. Download the tarball for your platform
 # macOS Apple Silicon
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.10.2/workledger_0.10.2_darwin_arm64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.13.0/workledger_0.13.0_darwin_arm64.tar.gz
 
 # macOS Intel
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.10.2/workledger_0.10.2_darwin_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.13.0/workledger_0.13.0_darwin_amd64.tar.gz
 
 # Linux amd64
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.10.2/workledger_0.10.2_linux_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.13.0/workledger_0.13.0_linux_amd64.tar.gz
 
 # 2. Verify checksum
 sha256sum -c checksums.txt
@@ -178,6 +178,22 @@ Then activate your trial or license key:
 ```bash
 workledger activate <your-license-key>
 ```
+
+If you are connecting to a shared remote ledger, verify that your surfaces are
+pointed at the same store before debugging missing WOs or relationship errors:
+
+```bash
+# CLI
+workledger status --json --resolved
+
+# HTTP
+curl -fsS "$WORKLEDGER_URL/healthz"
+```
+
+If your agent uses MCP, compare those results with the MCP
+`workledger_backend_info` tool. The important fields are:
+`store_fingerprint`, `store_label`, `store_kind`, and `mode`. Different
+fingerprints mean you are looking at different stores.
 
 Start Claude Code in any project and run `/load-context` to verify the default
 installed skill pack.

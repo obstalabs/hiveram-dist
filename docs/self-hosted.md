@@ -93,8 +93,12 @@ curl -fsS https://workledger.example.com/healthz
 Expected response:
 
 ```json
-{"status":"ok","db":"reachable"}
+{"status":"ok","db":"reachable","store_kind":"postgres","mode":"live_shared","store_label":"shared-postgres","store_fingerprint":"wl:postgres:..."}
 ```
+
+The extra store-identity fields are not decoration. They let you prove that CLI,
+HTTP, and MCP are all pointed at the same ledger before you trust a missing WO,
+an FK failure, or a relationship mismatch.
 
 ### End-to-end smoke
 
@@ -110,6 +114,29 @@ scripts/pg_smoke.sh --api-url "$WORKLEDGER_URL" --api-key "$WORKLEDGER_API_KEY"
 
 That script returns explicit `PASS`, `FAIL`, or `UNSUPPORTED` results so you can
 separate a broken deployment from an out-of-contract environment.
+
+### Cross-surface identity check
+
+For agent-heavy setups, compare backend identity across every surface you use:
+
+```bash
+# CLI
+workledger status --json --resolved
+
+# HTTP
+curl -fsS "$WORKLEDGER_URL/healthz"
+```
+
+If your agent uses MCP, also inspect `workledger_backend_info`. The values that
+should agree are:
+
+- `store_fingerprint`
+- `store_label`
+- `store_kind`
+- `mode`
+
+If those fingerprints differ, treat the mismatch as "different stores" before
+assuming a handler bug or missing data.
 
 ## Backup expectations
 

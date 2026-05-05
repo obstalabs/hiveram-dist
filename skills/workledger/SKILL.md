@@ -88,6 +88,27 @@ Do not echo secret-bearing environment variables while checking API access.
 
 `WORKLEDGER_URL` is the preferred remote-backend variable. For compatibility with older setups, the CLI and MCP server also accept `WORKLEDGER_HOST`; when present without a scheme it is treated as `https://<host>`.
 
+## Verify backend identity before trusting a mismatch
+
+When MCP, CLI, and HTTP disagree about whether a WO exists or whether a
+relationship target is present, compare store identity before assuming the data
+is wrong:
+
+- MCP: `workledger_backend_info`
+- CLI: `workledger status --json --resolved`
+- HTTP: `GET /healthz`
+
+Compare these fields:
+
+- `store_fingerprint`
+- `store_label`
+- `store_kind`
+- `mode`
+
+If the fingerprints differ, you are looking at different stores. Treat a
+relationship FK error as "missing in this store" first, not as proof that the
+relationship handler is broken.
+
 ## Operator rules
 
 - Search first, then create.
