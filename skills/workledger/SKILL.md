@@ -86,6 +86,8 @@ are already configured:
 
 Do not echo secret-bearing environment variables while checking API access.
 
+`WORKLEDGER_URL` is the preferred remote-backend variable. For compatibility with older setups, the CLI and MCP server also accept `WORKLEDGER_HOST`; when present without a scheme it is treated as `https://<host>`.
+
 ## Operator rules
 
 - Search first, then create.

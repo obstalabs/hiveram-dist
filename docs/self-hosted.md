@@ -73,6 +73,7 @@ Operators and agent clients should use the HTTPS API path, not the raw DSN:
 
 ```bash
 export WORKLEDGER_URL='https://workledger.example.com'
+# Legacy compatibility: WORKLEDGER_HOST also works for CLI and MCP, but URL is preferred.
 export WORKLEDGER_API_KEY='ol_sk_...'
 ```
 

@@ -99,6 +99,7 @@ done
 mkdir -p ~/.workledger
 cat > ~/.workledger/api-key.env << 'EOF'
 export WORKLEDGER_URL='https://workledger.example.com'
+# Legacy compatibility: WORKLEDGER_HOST also works for CLI and MCP, but URL is preferred.
 export WORKLEDGER_API_KEY='ol_sk_...'
 EOF
 chmod 600 ~/.workledger/api-key.env
