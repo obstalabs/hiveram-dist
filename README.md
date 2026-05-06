@@ -40,7 +40,7 @@ Deployment mode answers where the ledger lives. Runtime mode answers which autho
 - **Shared authoritative** — the normal mode for canonical writes, imports, notes, and closure evidence. Operators and agents point at the shared ledger and verify that they are on the expected authority surface before trusting results.
 - **Local portable** — explicit local or disconnected operation for bounded handoff, airgapped work, or temporary offline execution. Useful on purpose, but not the same thing as shared state.
 
-Hiveram supports portable reasoning and disconnected transfer as an explicit workflow. That means bounded bundles, checkpoints, and mission briefings can move across agents or environments, but returned results are still reviewed or applied against the canonical ledger instead of silently merging in the background.
+Hiveram supports portable reasoning and disconnected transfer as an explicit workflow. That means bounded bundles, checkpoints, and mission briefings can move across agents or environments, but returned results are still reviewed or applied against the canonical ledger instead of silently merging in the background. A senior agent can architect once, then many cheaper or specialized agents can execute from the same bounded truth without rediscovering the project.
 
 If you want to keep the ledger in your own infrastructure, start with the [self-hosted deployment guide](docs/self-hosted.md). It explains the remote path, runtime modes, verification surfaces, and how Hiveram's PostgreSQL support boundary maps to the public [PostgreSQL support matrix](docs/postgres-support.md).
 
