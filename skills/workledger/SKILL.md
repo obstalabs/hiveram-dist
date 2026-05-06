@@ -97,6 +97,20 @@ workledger bundle apply reply.wlbundle
 
 Portable reasoning is an explicit workflow. It is not hidden background sync.
 
+## Airgapped mirror and outbox transfer
+
+When a machine must move mirror or queued mutation state by file copy:
+
+```bash
+workledger mirror export mirror.wlxfer
+workledger outbox export queued-mutations.wlxfer
+workledger outbox apply-bundle queued-mutations.wlxfer --receipt-out queued-mutations.receipt.wlxfer
+workledger outbox import-receipt queued-mutations.receipt.wlxfer
+```
+
+Outbox request bundles carry an intended target fingerprint. Apply must stop if
+the receiving shared store does not match that fingerprint.
+
 ## Planning and grouping
 
 - Full queue planning: `workledger queue-plan <project>`

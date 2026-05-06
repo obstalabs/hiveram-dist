@@ -119,6 +119,23 @@ workledger bundle apply reply.wlbundle
 
 Treat this as explicit portable reasoning, not as a hidden sync mechanism.
 
+When the machine is truly airgapped, mirror and outbox state can move by file
+copy instead of direct network access:
+
+```bash
+workledger mirror export mirror.wlxfer
+workledger outbox export queued-mutations.wlxfer
+
+# connected side
+workledger outbox apply-bundle queued-mutations.wlxfer --receipt-out queued-mutations.receipt.wlxfer
+
+# disconnected side
+workledger outbox import-receipt queued-mutations.receipt.wlxfer
+```
+
+Outbox request bundles must only be applied against the shared store whose
+`store_fingerprint` matches the bundle manifest.
+
 ## Health verification
 
 Before onboarding a team, verify both the service path and the PostgreSQL path.

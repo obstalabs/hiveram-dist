@@ -75,13 +75,13 @@ If you prefer not to pipe to bash:
 ```bash
 # 1. Download the tarball for your platform
 # macOS Apple Silicon
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.14.2/workledger_0.14.2_darwin_arm64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.15.0/workledger_0.15.0_darwin_arm64.tar.gz
 
 # macOS Intel
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.14.2/workledger_0.14.2_darwin_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.15.0/workledger_0.15.0_darwin_amd64.tar.gz
 
 # Linux amd64
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.14.2/workledger_0.14.2_linux_amd64.tar.gz
+curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.15.0/workledger_0.15.0_linux_amd64.tar.gz
 
 # 2. Verify checksum
 sha256sum -c checksums.txt
@@ -148,6 +148,32 @@ workledger bundle apply reply.wlbundle
 ```
 
 That workflow is explicit by design. Portable reasoning is a controlled handoff path, not background merge magic.
+
+## Airgapped mirror and outbox transfer
+
+When a machine is fully disconnected, Hiveram now has an explicit file-copy
+transport for mirror snapshots and queued shared mutations:
+
+```bash
+workledger mirror export mirror.wlxfer
+workledger outbox export queued-mutations.wlxfer
+
+# on a connected machine pointed at the authoritative shared ledger
+workledger outbox apply-bundle queued-mutations.wlxfer --receipt-out queued-mutations.receipt.wlxfer
+
+# back on the disconnected machine
+workledger outbox import-receipt queued-mutations.receipt.wlxfer
+```
+
+These `.wlxfer` bundles carry:
+
+- a manifest,
+- per-file SHA-256 checksums,
+- an intended target fingerprint for outbox requests,
+- authoritative replay receipts with returned `server_wo_id` values for create operations.
+
+That keeps airgapped workflows explicit and reviewable instead of pretending a
+background sync channel exists.
 
 ## Included skills
 
