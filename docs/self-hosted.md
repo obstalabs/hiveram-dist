@@ -1,20 +1,25 @@
 # Self-hosted Hiveram
 
-Use this guide when you want to keep the Hiveram ledger in your own
-infrastructure instead of relying on an Obsta-managed deployment.
+Use this guide when you want to keep the Hiveram ledger in your own infrastructure instead of relying on an Obsta-managed deployment.
 
 ## Custody modes
 
 Hiveram supports three practical deployment modes:
 
 - **Local** — SQLite on one machine for solo evaluation or private work
-- **Customer-hosted** — you run the Workledger/Hiveram HTTP API and PostgreSQL
-  in your own environment
-- **Obsta-managed** — Obsta runs the remote service for you, while your agents
-  connect over HTTPS
+- **Customer-hosted** — you run the Workledger/Hiveram HTTP API and PostgreSQL in your own environment
+- **Obsta-managed** — Obsta runs the remote service for you, while your agents connect over HTTPS
 
-Hiveram Pro is a product tier, not a custody requirement. Customer-hosted
-deployments are a normal supported path.
+Hiveram Pro is a product tier, not a custody requirement. Customer-hosted deployments are a normal supported path.
+
+## Runtime modes
+
+Custody mode answers where the ledger lives. Runtime mode answers which authority surface an operator or agent is using right now.
+
+- **Shared authoritative** — the normal mode for canonical writes, notes, imports, bundle apply, and closure evidence. Operators point at the shared API and verify they are on the expected ledger before trusting results.
+- **Local portable** — explicit local or disconnected operation for bounded handoff, airgapped execution, or temporary offline work. Valuable on purpose, but not the same thing as the canonical shared ledger.
+
+Public promise: portable reasoning and airgapped transfer are explicit workflows. Results come back for review or apply against the system of record. There is no implied silent reconciliation contract.
 
 ## Support boundary
 
@@ -22,8 +27,7 @@ Hiveram supports standard PostgreSQL. The public support contract for customer-h
 
 - [PostgreSQL support matrix](postgres-support.md)
 
-Use that support matrix to distinguish officially supported, tested,
-best-effort, and unsupported environments before you promise compatibility.
+Use that support matrix to distinguish officially supported, tested, best-effort, and unsupported environments before you promise compatibility.
 
 ## Recommended architecture
 
@@ -31,10 +35,10 @@ The normal team path is:
 
 1. PostgreSQL 15+ in your environment
 2. `workledger serve --http` running against that database
-3. Agent clients configured with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY` (the bearer token may be `ol_`-prefixed)
+3. Agent clients configured with `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`
+4. MCP or CLI clients started in shared authoritative mode when they are expected to write to the canonical ledger
 
-Keep raw `WORKLEDGER_DSN` access for setup, migrations, smoke validation, and
-admin operations. Most operators should never need a database connection string.
+Keep raw `WORKLEDGER_DSN` access for setup, migrations, smoke validation, and admin operations. Most operators should never need a database connection string.
 
 ## Minimum setup
 
@@ -43,8 +47,7 @@ admin operations. Most operators should never need a database connection string.
 Start with a standard PostgreSQL 15+ deployment that meets the support matrix:
 
 - normal PostgreSQL DSN using `postgres://` or `postgresql://`
-- normal TLS mode such as `require`, `verify-ca`, or `verify-full` when the
-  database is remote
+- normal TLS mode such as `require`, `verify-ca`, or `verify-full` when the database is remote
 - network reachability from the machine that will run the Hiveram API
 
 Example DSN shape:
@@ -77,8 +80,44 @@ export WORKLEDGER_URL='https://workledger.example.com'
 export WORKLEDGER_API_KEY='ol_sk_...'
 ```
 
-Direct DSN access is still valid for admin tasks such as first bootstrap,
-deployment checks, and explicit maintenance.
+Direct DSN access is still valid for admin tasks such as first bootstrap, deployment checks, and explicit maintenance.
+
+## Shared authoritative operator path
+
+Before trusting writes, imports, or bundle apply operations, verify the authority surface:
+
+```bash
+workledger status --json --resolved
+workledger serve --mcp --mcp-mode shared-authoritative
+```
+
+Expect the shared API surface to agree on:
+
+- `mode`
+- `store_kind`
+- `store_label`
+- `store_fingerprint`
+
+If those identity fields do not match the expected shared deployment, stop before writing.
+
+## Local portable and airgapped path
+
+Use local portable mode only when the machine is intentionally disconnected or when work must move by file copy or email:
+
+```bash
+workledger serve --mcp --mcp-mode local-portable
+workledger mirror pull
+workledger checkpoint create myapp --summary "before handoff"
+workledger bundle export myapp 118 --out task.wlbundle
+```
+
+Returned work can come back as a reply bundle for review or controlled apply against the shared ledger:
+
+```bash
+workledger bundle apply reply.wlbundle
+```
+
+Treat this as explicit portable reasoning, not as a hidden sync mechanism.
 
 ## Health verification
 
@@ -90,7 +129,7 @@ Before onboarding a team, verify both the service path and the PostgreSQL path.
 curl -fsS https://workledger.example.com/healthz
 ```
 
-Expected response:
+Expected response shape:
 
 ```json
 {"status":"ok","db":"reachable","store_kind":"postgres","mode":"live_shared","store_label":"shared-postgres","store_fingerprint":"wl:postgres:..."}
@@ -112,8 +151,7 @@ scripts/pg_smoke.sh --dsn "$WORKLEDGER_DSN"
 scripts/pg_smoke.sh --api-url "$WORKLEDGER_URL" --api-key "$WORKLEDGER_API_KEY"
 ```
 
-That script returns explicit `PASS`, `FAIL`, or `UNSUPPORTED` results so you can
-separate a broken deployment from an out-of-contract environment.
+That script returns explicit `PASS`, `FAIL`, or `UNSUPPORTED` results so you can separate a broken deployment from an out-of-contract environment.
 
 ### Cross-surface identity check
 
@@ -140,21 +178,15 @@ assuming a handler bug or missing data.
 
 ## Backup expectations
 
-Treat PostgreSQL as the ledger of record for customer-hosted Hiveram. At a
-minimum:
+Treat PostgreSQL as the ledger of record for customer-hosted Hiveram. At a minimum:
 
 - enable scheduled backups or managed snapshots
 - use point-in-time recovery if your platform supports it
 - test a restore path before trusting the deployment with real work
 - preserve the API key configuration used by your operators
 
-SQLite is a good local evaluation mode, but it is not the backup strategy for a
-shared customer-hosted deployment.
+SQLite is a good local evaluation mode, but it is not the backup strategy for a shared customer-hosted deployment.
 
 ## What this guide does not promise
 
-This guide intentionally does not promise that every PostgreSQL-adjacent proxy,
-fork, or cloud quirk is equally supported. If your environment uses unusual
-connection pooling, custom TLS, or a PostgreSQL-compatible service with
-non-standard behavior, validate it against the support matrix and smoke kit
-first.
+This guide intentionally does not promise that every PostgreSQL-adjacent proxy, fork, or cloud quirk is equally supported. If your environment uses unusual connection pooling, custom TLS, or a PostgreSQL-compatible service with non-standard behavior, validate it against the support matrix and smoke kit first.
