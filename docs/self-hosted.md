@@ -26,6 +26,11 @@ For the broader product topology contract, see
 deployments usually sit inside the Hiveram-only or hybrid shapes described
 there; this guide focuses only on the custody and runtime mechanics.
 
+For the concrete operator handoff sequence, see
+[Operator Workflow for Portable Reasoning](operator-workflow.md). That guide
+shows how WO, bundle, and checkpoint rehydration differ, and how shared apply,
+portable reply, and offline receipt flows come back without authority drift.
+
 ## Support boundary
 
 Hiveram supports standard PostgreSQL. The public support contract for customer-hosted deployments is here:

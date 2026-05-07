@@ -165,3 +165,6 @@ relationship handler is broken.
 - Treat local portable mode as an explicit offline or handoff mode.
 - Do not use `workledger import` for normal day-to-day WO authoring.
 - Do not describe portable reasoning as silent sync or automatic reconciliation.
+- For the full operator handoff journey, read `docs/operator-workflow.md` in
+  the Hiveram distribution. It is the canonical sequence for WO-based,
+  bundle-based, and checkpoint-based rehydration plus return-path handling.

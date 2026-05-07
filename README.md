@@ -50,6 +50,11 @@ document explains the difference between NR-only, Hiveram-only, and hybrid
 deployments, and it defines the authority-boundary promises each topology can
 honestly make.
 
+For the concrete handoff journey, read
+[Operator Workflow for Portable Reasoning](docs/operator-workflow.md). That
+guide covers WO-based, bundle-based, and checkpoint-based rehydration plus the
+direct-apply, receipt, and branch-history return paths.
+
 ## Quick install
 
 ```bash
@@ -167,6 +172,9 @@ Hiveram supports three legitimate product shapes:
 
 The topology matrix, trust-floor rules, and demo/roadmap guidance live in
 [docs/context-mobility.md](docs/context-mobility.md).
+
+The step-by-step operator journey for handoff and rehydration lives in
+[docs/operator-workflow.md](docs/operator-workflow.md).
 
 ## Airgapped mirror and outbox transfer
 
