@@ -44,6 +44,12 @@ Hiveram supports portable reasoning and disconnected transfer as an explicit wor
 
 If you want to keep the ledger in your own infrastructure, start with the [self-hosted deployment guide](docs/self-hosted.md). It explains the remote path, runtime modes, verification surfaces, and how Hiveram's PostgreSQL support boundary maps to the public [PostgreSQL support matrix](docs/postgres-support.md).
 
+For the deeper product contract behind those operator surfaces, read
+[Context Mobility and Deployment Topologies](docs/context-mobility.md). That
+document explains the difference between NR-only, Hiveram-only, and hybrid
+deployments, and it defines the authority-boundary promises each topology can
+honestly make.
+
 ## Quick install
 
 ```bash
@@ -148,6 +154,19 @@ workledger bundle apply reply.wlbundle
 ```
 
 That workflow is explicit by design. Portable reasoning is a controlled handoff path, not background merge magic.
+
+## Topology fit
+
+Hiveram supports three legitimate product shapes:
+
+- **NR-only** for live-window shaping and bounded execution hygiene
+- **Hiveram-only / workledger-only** for durable shared truth, portable
+  bundles, checkpoints, and mission briefings
+- **Hybrid** for teams that want both a canonical work graph and a cleaner live
+  execution window
+
+The topology matrix, trust-floor rules, and demo/roadmap guidance live in
+[docs/context-mobility.md](docs/context-mobility.md).
 
 ## Airgapped mirror and outbox transfer
 
