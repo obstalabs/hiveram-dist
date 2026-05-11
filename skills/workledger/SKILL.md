@@ -57,6 +57,8 @@ If those values differ, you are not on the same authority surface.
 - Project list: `workledger projects`
 - Current queue from the current tip: `workledger queue <project> --target current`
 - Lane and tip view: `workledger lanes <project> --target current`
+- Recent scaffold path: `workledger trellis read --project <project> --latest 5`
+- Direction restore from the scaffold: `workledger gradient detect --project <project> --latest 10`
 - Queue view: `workledger list <project> --status open`
 - Full WO: `workledger get <project> <id>`
 - Rich WO view: `workledger detail <project> <id>`
@@ -73,6 +75,31 @@ Those surfaces consume Workledger's current-tip planner truth:
 
 Use raw `list` output when you need a full open backlog view, not when you need
 execution order from the current tip.
+
+## Scaffold review and continuation
+
+Use these surfaces when the question is not only "what is next?" but also
+"what is the agent standing on right now?"
+
+```bash
+workledger trellis read --project <project> --latest 5
+workledger gradient detect --project <project> --latest 10
+```
+
+Use the recent trellis path to recover the decisions, constraints, and evidence
+that still matter near the current tip. Use gradient detection to restore
+direction for a fresh session without re-reading a giant transcript.
+
+When a claim or proposed change needs review with context, build a review diff
+instead of comparing prose by hand:
+
+```bash
+workledger trellis diff --base-file base.yaml --candidate-file candidate.yaml --context-file context.yaml --format markdown
+```
+
+That surface shows structural change, semantic target impact, and whether the
+change is a drift signal or a real target refinement. Treat standing and
+confidence as load-bearing when you decide what to trust next.
 
 ## Creation and updates
 

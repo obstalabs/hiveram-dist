@@ -16,14 +16,18 @@ workledger state before making changes.
    - `workledger next <project>`
    - `workledger list <project> --status open`
    - `workledger blocked <project>`
-3. Open the most relevant WO details:
+3. Restore the recent scaffold path around the current tip:
+   - `workledger trellis read --project <project> --latest 5`
+   - `workledger gradient detect --project <project> --latest 10`
+4. Open the most relevant WO details:
    - `workledger get <project> <id>`
    - `workledger detail <project> <id>`
-4. Summarize:
+5. Summarize:
    - what the project is
    - what the current target and active lane are
    - what is ready now, next, later, and blocked
    - what is important but off-lane
+   - what the recent scaffold path says still matters
    - what looks like the best next step from the current tip
 
 ## Rules
@@ -32,4 +36,6 @@ workledger state before making changes.
 - Do not create, update, or claim WOs during orientation.
 - Prefer `queue` and `lanes` over raw backlog order when those surfaces are
   available.
+- Prefer `trellis read` plus `gradient detect` over transcript replay when those
+  surfaces are available.
 - Ask the user which WO or objective should be handled next once the summary is ready.

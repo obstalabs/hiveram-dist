@@ -145,6 +145,28 @@ and deferred buckets. `lanes` shows the active lane, current tip, and the work
 that is real but off-lane. That keeps fresh sessions from reconstructing
 execution order from a giant open-WO list.
 
+## Scaffold review and continuation
+
+Once the current tip is visible, inspect the recent scaffold path that supports
+it before starting a fresh agent session:
+
+```bash
+workledger trellis read --project myapp --latest 5
+workledger gradient detect --project myapp --latest 10
+```
+
+Those surfaces recover the recent decisions, constraints, evidence, and
+direction that still matter around the tip. If a proposed change needs review
+with backing context instead of prose-only comparison, use:
+
+```bash
+workledger trellis diff --base-file base.yaml --candidate-file candidate.yaml --context-file context.yaml --format markdown
+```
+
+This is the product surface for continuation without transcript replay: current
+tip, attached scaffold path, reviewable changes with context, and enough claim
+weight to tell canonical guidance from tentative ideas.
+
 ## Local portable startup
 
 Use this when the machine is intentionally offline, airgapped, or preparing a bounded handoff:

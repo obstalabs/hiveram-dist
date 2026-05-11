@@ -178,6 +178,33 @@ For fresh-agent orientation, treat these as the first read surfaces. They are
 lighter and truer than re-reading giant transcripts or inferring order from a
 flat list of open WOs.
 
+## Inspect the scaffold before continuing
+
+Once the queue and lane are visible, restore the recent scaffold path around
+the current tip before asking a fresh agent to act:
+
+```bash
+workledger trellis read --project myapp --latest 5
+workledger gradient detect --project myapp --latest 10
+```
+
+Use this step to answer:
+
+- what decisions and constraints still bear weight
+- what evidence forced the current shape
+- what the next missing piece appears to be
+- whether recent pressure points signal drift or real target refinement
+
+If a proposed change needs review against backing context instead of prose-only
+comparison, build a review diff:
+
+```bash
+workledger trellis diff --base-file base.yaml --candidate-file candidate.yaml --context-file context.yaml --format markdown
+```
+
+That keeps claim standing and confidence visible enough to separate canonical
+claims from tentative ones before the next session continues.
+
 ## The handoff sequence
 
 The normal handoff sequence looks like this:
@@ -196,11 +223,14 @@ The normal handoff sequence looks like this:
 workledger status --json --resolved
 workledger queue myapp --target current
 workledger lanes myapp --target current
+workledger trellis read --project myapp --latest 5
+workledger gradient detect --project myapp --latest 10
 workledger briefing wo myapp 118
 ```
 
-This is enough when the next run stays on the same shared ledger and only needs
-a fresh, bounded task contract.
+This is enough when the next run stays on the same shared ledger and needs both
+a bounded task contract and the recent scaffold path that explains why the tip
+looks the way it does.
 
 ### Portable request/reply handoff
 
