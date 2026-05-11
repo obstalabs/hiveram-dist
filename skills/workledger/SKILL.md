@@ -55,12 +55,24 @@ If those values differ, you are not on the same authority surface.
 ## Core read flows
 
 - Project list: `workledger projects`
+- Current queue from the current tip: `workledger queue <project> --target current`
+- Lane and tip view: `workledger lanes <project> --target current`
 - Queue view: `workledger list <project> --status open`
 - Full WO: `workledger get <project> <id>`
 - Rich WO view: `workledger detail <project> <id>`
 - Duplicate check: `workledger search "<keywords>" --project <project>`
 - Blockers: `workledger blocked <project>`
 - Dependency tree: `workledger deps-tree <project> <id>`
+
+Use `queue` and `lanes` first when the job is "what should we do from here?"
+Those surfaces consume Workledger's current-tip planner truth:
+
+- `queue` shows `now`, `next`, `later`, `blocked`, and deferred off-lane work
+- `lanes` shows the current target, current tip, active lane, support lanes,
+  blocker lanes, and deferred smoke or side work
+
+Use raw `list` output when you need a full open backlog view, not when you need
+execution order from the current tip.
 
 ## Creation and updates
 
@@ -113,6 +125,8 @@ the receiving shared store does not match that fingerprint.
 
 ## Planning and grouping
 
+- Current-tip execution order: `workledger queue <project> --target current`
+- Lane graph from the current tip: `workledger lanes <project> --target current`
 - Full queue planning: `workledger queue-plan <project>`
 - Target-centered cohort: `workledger target-plan <project> --wo WO-23`
 - Session grouping: `workledger dispatch <project>`

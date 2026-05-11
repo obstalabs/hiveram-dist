@@ -152,6 +152,32 @@ This mode means:
 
 Operators should describe these results as queued, not committed.
 
+## See the queue from the current tip
+
+Before choosing a WO from raw backlog order, pull the current queue and lane
+view that Workledger now computes from the current tip:
+
+```bash
+workledger queue myapp --target current
+workledger lanes myapp --target current
+```
+
+Use these surfaces to answer different questions:
+
+- `queue` answers what is ready now, what comes next, what is later, what is
+  blocked, and what is intentionally deferred
+- `lanes` answers what the current target is, where the active lane is, which
+  support or safety lanes exist, and which old smoke-stage items are off-lane
+
+This matters because importance is not the same thing as target reach. A real
+bug can still be the wrong next move if it does not advance the current target.
+The queue view keeps important-but-off-lane work visible without mixing it into
+the execution lane.
+
+For fresh-agent orientation, treat these as the first read surfaces. They are
+lighter and truer than re-reading giant transcripts or inferring order from a
+flat list of open WOs.
+
 ## The handoff sequence
 
 The normal handoff sequence looks like this:
@@ -168,6 +194,8 @@ The normal handoff sequence looks like this:
 
 ```bash
 workledger status --json --resolved
+workledger queue myapp --target current
+workledger lanes myapp --target current
 workledger briefing wo myapp 118
 ```
 

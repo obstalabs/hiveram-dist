@@ -130,6 +130,21 @@ workledger serve --mcp --mcp-mode shared-authoritative
 
 Look for a shared `mode`, `store_label`, and `store_fingerprint` before trusting writes, imports, or bundle apply operations.
 
+## Current queue from the tip
+
+When the question is "what should we do from here?" use the current-tip queue
+and lane surfaces before falling back to raw backlog order:
+
+```bash
+workledger queue myapp --target current
+workledger lanes myapp --target current
+```
+
+`queue` gives the operator the actionable `now`, `next`, `later`, `blocked`,
+and deferred buckets. `lanes` shows the active lane, current tip, and the work
+that is real but off-lane. That keeps fresh sessions from reconstructing
+execution order from a giant open-WO list.
+
 ## Local portable startup
 
 Use this when the machine is intentionally offline, airgapped, or preparing a bounded handoff:
