@@ -2,6 +2,11 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.25.9] - 2026-05-27
+
+### Fixed
+- Config file now reads API keys from `export VAR=value` format, not just bare keys. Existing `api-key.env` files work without changes.
+
 ## [0.25.8] - 2026-05-27
 
 ### Added
