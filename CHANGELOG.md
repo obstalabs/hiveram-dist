@@ -2,6 +2,11 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.25.10] - 2026-05-27
+
+### Fixed
+- Proxy from config.yaml now applies to all outbound connections including healthcheck and status probes.
+
 ## [0.25.9] - 2026-05-27
 
 ### Fixed
