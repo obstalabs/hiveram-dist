@@ -2,6 +2,12 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.25.11] - 2026-05-27
+
+### Fixed
+- Status line no longer shows permanent `wl:!` when an unrelated backend probe fails. Readiness computed from resolved backend only.
+- Rate limit raised to 300 requests per minute; admin keys are exempt.
+
 ## [0.25.10] - 2026-05-27
 
 ### Fixed
