@@ -47,6 +47,57 @@ These environments may work, but they are not part of the default product contra
 
 Best-effort support means we will help investigate, but we do not market these environments as first-class targets without explicit validation evidence.
 
+## Network proxies (SOCKS5, HTTP)
+
+When a VPN or firewall makes direct PostgreSQL connections unreliable, route traffic through the HTTP API behind a SOCKS5 or HTTP proxy instead. The Workledger CLI and HTTPStore respect the standard Go proxy environment variables.
+
+### HTTP API through a proxy (recommended)
+
+Set `ALL_PROXY` to route all HTTP API traffic through a local SOCKS5 proxy:
+
+```bash
+export WORKLEDGER_URL=https://workledger.example.com
+export WORKLEDGER_API_KEY=wlk_...
+export ALL_PROXY=socks5://127.0.0.1:1080
+workledger list myproject
+```
+
+This works because Hiveram's HTTPStore uses Go's default HTTP transport, which honors `ALL_PROXY`, `HTTPS_PROXY`, and `HTTP_PROXY` automatically. No code changes or special configuration required.
+
+Supported proxy schemes:
+
+- `socks5://host:port` — SOCKS5 proxy (most VPN setups)
+- `http://host:port` — HTTP CONNECT proxy
+- `https://host:port` — HTTPS CONNECT proxy
+
+### Direct DSN through a proxy
+
+PostgreSQL DSN connections (`WORKLEDGER_DSN`) do not honor HTTP proxy environment variables because they use TCP directly, not HTTP. If your VPN blocks direct Postgres but allows SOCKS, two options:
+
+1. **Switch to HTTP API mode.** Set `WORKLEDGER_URL` instead of `WORKLEDGER_DSN` and use the proxy as shown above. This is the recommended path.
+
+2. **Local TCP tunnel.** Forward a local port through the SOCKS proxy to the Postgres host:
+
+   ```bash
+   # Forward local:15432 → neon-host:5432 through SOCKS5
+   ssh -D 1080 -N jumpbox &
+   socat TCP-LISTEN:15432,fork SOCKS4A:127.0.0.1:neon-host:5432,socksport=1080 &
+   # Then point WORKLEDGER_DSN at localhost:15432 instead of the remote host
+   ```
+
+   This is a workaround, not a product feature. Prefer the HTTP API path.
+
+### When to use a proxy
+
+- VPN setup routes general traffic through SOCKS but blocks direct Postgres ports
+- Corporate firewall allows HTTPS outbound but not arbitrary TCP
+- Connecting from a restricted network where only a proxy is available
+- Latency or reliability issues with direct Postgres that disappear through the proxy path
+
+### MCP and CLI
+
+The MCP server runs as a local stdio process and does not need a proxy for its own transport. However, if the MCP server's backend is HTTPStore, the proxy environment variables apply to the MCP server's outbound HTTP calls to the Workledger API. Set the proxy variables in the MCP server's environment (typically in `claude_desktop_config.json` or `settings.json` env block).
+
 ## Non-goals
 
 These are outside the support contract:
