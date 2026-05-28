@@ -2,6 +2,14 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.25.13] - 2026-05-28
+
+### Added
+- `search --summary` returns a compact one-line-per-result view with complexity and readiness badges, matching `list --summary`.
+
+### Fixed
+- Saving shared memory and context no longer requires anchoring to a work order. Memory writes are audited automatically (who, which machine, when) and sync to the shared store directly. Other canonical writes are unchanged.
+
 ## [0.25.12] - 2026-05-28
 
 ### Added
