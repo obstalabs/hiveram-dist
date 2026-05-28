@@ -2,6 +2,15 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.25.12] - 2026-05-28
+
+### Added
+- The CLI and MCP server now work fully against the hosted HTTP API backend. Batch updates, similar-WO search, blocked-WO and dependency queries, and the execution-object surface all work over HTTP — no direct database connection required.
+
+### Fixed
+- Operator memory and context saves can be authorized with an audited override when no specific work order applies, instead of being blocked.
+- Work order updates preserve claim ownership and closure evidence when applied over HTTP or through the agent tools.
+
 ## [0.25.11] - 2026-05-27
 
 ### Fixed
