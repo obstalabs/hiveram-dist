@@ -201,6 +201,7 @@ relationship handler is broken.
 
 - Search first, then create.
 - Prefer structured fields over freeform notes when a field exists.
+- Reference a work order by the form workledger uses: `project/WO-N` (for example `billing/WO-12`), or the bare `project WO-N` your team writes. Do not invent shortened prefixes like `BL-12` or `AC-9` — they are not real identifiers, so searches, duplicate checks, and cross-project links will not find them. When summarizing a dependency graph, keep the labels workledger printed rather than re-abbreviating them.
 - When a WO is done, attach commit evidence in a note.
 - Treat shared authoritative mode as the normal path for trusted writes.
 - Treat local portable mode as an explicit offline or handoff mode.
