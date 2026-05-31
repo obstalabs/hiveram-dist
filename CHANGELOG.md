@@ -2,6 +2,20 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.26.0] - 2026-06-01
+
+### Added
+- `link-commit` links a commit directly to a work order, so closing work no longer depends on commit-message conventions — useful for audit-closing already-shipped work with proper evidence.
+- `find-similar` surfaces related work orders before you create a new one, reducing duplicates.
+- Two-stage closure: work orders can move through a pending-verification state before done, with the queue and stats accounting for it.
+
+### Fixed
+- Direct commit links are preserved end-to-end over the hosted API, including ownership checks and author identity.
+- Closure checks no longer mistake internal backend identifiers for commit references.
+- Similarity search runs reliably against the hosted API.
+- Destructive operations over the API require explicit confirmation.
+- Bulk and empty results return consistent, predictable output.
+
 ## [0.25.13] - 2026-05-28
 
 ### Added
