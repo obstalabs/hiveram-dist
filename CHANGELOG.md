@@ -2,7 +2,7 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
-## [0.26.0] - 2026-06-01
+## [0.26.1] - 2026-06-01
 
 ### Added
 - `link-commit` links a commit directly to a work order, so closing work no longer depends on commit-message conventions — useful for audit-closing already-shipped work with proper evidence.
