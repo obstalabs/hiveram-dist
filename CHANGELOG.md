@@ -2,6 +2,15 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.29.1] - 2026-06-09
+
+### Fixed
+- Work orders with `removal-policy: prohibited` now reach rocket-ready even when
+  their planning prose contains removal verbs naming functionality objects (flags,
+  endpoints, commands). The signal is surfaced as an advisory note rather than a
+  hard blocker, so additive work no longer requires prose rewrites or no-op
+  workarounds to pass readiness checks.
+
 ## [0.26.1] - 2026-06-01
 
 ### Added
