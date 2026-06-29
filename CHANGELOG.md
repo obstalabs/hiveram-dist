@@ -2,6 +2,106 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.36.0] - 2026-06-28
+
+### Added
+- Much better search recall on large projects. Search now down-weights the common words that appear in almost every work order, so the distinctive terms that actually identify what you're looking for carry the result. On a realistic self-retrieval benchmark this roughly doubled the rank quality of the correct match. Search stays fully deterministic — no model call, no per-query network request.
+
+### Operator action
+- This is a server-side improvement, and it takes effect only after a one-time backfill. After updating, run `workledger reembed` once (whole corpus, no project filter) to rebuild the search index with the new weighting. Until you do, search keeps working exactly as before — no regression, but you won't see the recall gain. You can turn the semantic layer off entirely with `WORKLEDGER_EMBEDDINGS_DISABLED=1`.
+
+## [0.35.0] - 2026-06-27
+
+### Added
+- Safe in-session MCP upgrades. A new supervised mode keeps your editor or agent connected to a stable process while the work order server behind it is refreshed, so you can pick up a newer install without restarting your whole session. It only refreshes when the installed version is genuinely newer and the available tools are unchanged; if the tool set changed, it tells the client to reconnect instead of swapping silently. An in-flight request always finishes first, and if a refresh fails the existing connection keeps working.
+
+### Operator action
+- Optional and off by default. Start it with `workledger mcp-shim`; enable automatic refresh with `--allow-worker-restart` once you want hands-off upgrades. Existing `workledger serve --mcp` usage is unchanged.
+
+## [0.34.2] - 2026-06-26
+
+### Added
+- Smarter search: search now blends keyword matching with meaning-based recall, so a work order that is the right match but uses different words is more likely to surface — reducing "no results for something that clearly exists." Each result shows how it was matched. Meaning-based recall is computed locally at write time (no external service is called per search) and can be turned off to fall back to keyword-only. A new `reembed` step backfills existing work orders, including for teams connected over the network. Existing keyword searches are unaffected.
+
+## [0.34.1] - 2026-06-25
+
+### Fixed
+- Work-order creation now triggers its "created" event no matter how you create the item — command line, editor integration, or API — instead of only over the API. Local command-line creates deliver the event before the command returns.
+- Safe retries: if a create is interrupted (timeout, dropped connection) and you retry it, you get the same work order back instead of an accidental duplicate — either by passing a stable retry key or automatically when the same item is created again within a short window.
+- A completed item awaiting a single batch landing can no longer get stuck un-closable when its change was squash-merged; it can be closed with an audited override while normal completions keep their full verification.
+
+### Changed
+- Listing, creating, and the same operations across all interfaces now share one implementation, so they behave identically and return the same shapes — fewer surprises when switching between the command line, editor, and API.
+
+### Added
+- New create options: a stable retry key for safe send-and-forget creates, and a canonical complexity-tier flag. Listing uses a consistent default page size.
+
+## [0.34.0] - 2026-06-22
+
+### Added
+- Lighter-weight output for scripts and agents: read commands can now return plain one-line or tab-separated rows (`--format oneline|tsv`, with an optional `--no-header`) instead of JSON, so tooling no longer has to parse JSON for simple lists. JSON remains the default and is unchanged.
+- Attention cues on work clusters: the cluster view now flags clusters that look worth a second look (for example, very broad scope or mixed risk) under a REVIEW group. These are advisory only — they never change priorities, links, or what is allowed to run.
+- Record where a work item was discussed: you can attach a short pointer and summary linking an item back to the conversation that produced or refined it.
+- More forgiving search: multi-word searches no longer need quotes; a helpful hint is shown if it looks like you meant to filter by project.
+
+### Fixed
+- More reliable emergency recovery for the completion-evidence safeguard: if the safeguard is switched off or its settings cannot be read, completions are allowed through with an audit note rather than being blocked — the safeguard can never lock you out of closing work.
+- More honest completion checks on hosted setups: completion proof supplied by the client is trusted when valid, and its source is recorded clearly instead of being reported as a configuration problem; completions with no proof still fail safely.
+- Fixed a data-integrity issue where bulk status updates on the hosted database could mis-store some work-item fields.
+
+## [0.33.1] - 2026-06-21
+
+### Fixed
+- Reliability: work orders that had been automatically claimed could become un-updatable in some cases; they can now be updated and closed normally.
+- More trustworthy automatic completion: a work order is only marked done when its completion is genuinely verified, never on incomplete evidence.
+- Audit clarity: memory and context writes now record who made the change separately from which machine it came from.
+
+## [0.33.0] - 2026-06-20
+
+### Added
+- See which work to do next, by cluster: a new command ranks ready-to-start work clusters in priority order and shows, for each, its members, priority, risk class, and whether it is ready or blocked (and by what) — so you can pick the next shippable unit at a glance instead of hunting through individual items.
+- Mark each work item's risk class (high / medium / low) so high-stakes changes are visible and treated differently from routine ones.
+- Land a whole cluster at once: when a related set of work is complete and verified locally, land it together with a single step — closing the cluster as one unit with shared proof, instead of one item at a time.
+
+### Changed
+- More reliable verification: the test suite no longer depends on machine-specific state, so results are consistent across environments.
+
+## [0.32.0] - 2026-06-19
+
+### Added
+- Reserve a work-order number before you create it: `reserve-id` returns the next free number and holds it briefly so two people (or agents) working at once never land on the same id, and `get-next-id` reads it without holding. This keeps branch names, commits, and the work order itself pointing at the same number.
+- Wire dependencies as you create work: `create --depends-on` records a new work order's prerequisites in one step, instead of creating it and linking afterwards.
+- A pre-dispatch readiness check confirms a work order is fully specified, its repository is in a clean (green) state, and a suitable runner is available before any work is handed off — so a dispatch that would fail is stopped up front instead of partway through.
+
+### Changed
+- Closing a work order now requires real evidence: a landed commit plus a passing build signal. Closing without that evidence requires an explicit, recorded acknowledgement, and an attempt to close without proof gets a clear, recoverable message rather than silently completing. Overriding the check requires a recorded reason.
+- Under parallel branches, each work order remembers the exact code revision it was claimed against, so work is always verified against the right checkout.
+
+### Fixed
+- Work orders that merely describe credentials or security topics in plain prose are no longer mistaken for leaked secrets; only real secret values are blocked, and the message points to how to redact or reference them. Genuine secret detection is unchanged.
+
+### Reliability
+- Continuous-integration builds on our self-hosted runners are now stable; a cache conflict that intermittently produced false build failures has been resolved.
+
+## [0.31.0] - 2026-06-15
+
+### Added
+- A new verify-pending command lets an operator confirm work orders awaiting verification: it promotes those whose implementing commit has landed on the canonical branch and reopens those that have not, each with a clear note. Runs once by default, with continuous and preview modes.
+
+### Changed
+- Work-order readiness now advises when a spec asks a worker to act for-each item of a category without listing the category's members, so the spec can be pinned before it is handed off. This is advisory and does not block creation.
+
+## [0.30.0] - 2026-06-11
+
+### Added
+- A new `doctor` command reports which backends the tool can reach (hosted API, database, or local file) and, when one is unreachable, names the setting to check — without ever printing a credential. Useful for diagnosing setup from an automation environment.
+
+### Changed
+- The command-line tool now authenticates from its own configuration in a fresh shell, so automated agents no longer need a hand-sourced environment to read and write work orders.
+- Routine writes (notes, updates, relationships) no longer require a manual override flag; the tool resolves who is making the change from its configuration, while still protecting work actively claimed by someone else.
+- Choosing the local database or a specific backend explicitly is now honored exactly, instead of quietly falling back to a configured remote; degraded local reads are clearly marked.
+- Common command mistakes now produce an actionable error that shows the correct usage and valid values rather than a bare usage dump.
+
 ## [0.29.1] - 2026-06-09
 
 ### Fixed
