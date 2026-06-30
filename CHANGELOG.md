@@ -2,6 +2,17 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.37.0] - 2026-06-30
+
+### Added
+- `workledger close` for work orders that were squash-merged. It records the landed commit on the default branch as the close proof, refuses to let the person who did the work close it themselves, and keeps the original pre-squash branch SHA. If it can't determine who executed the work, it stops rather than closing — pass `--allow-unverified-executor` to override with an audit note.
+- `workledger reconcile` compares each work order's status against git. It reports the ones where the code already landed but the status was never advanced, the ones marked ready with no commit behind them, and stalled claims. It can close the unambiguous landed ones for you, through the same close-proof check as a normal close.
+
+### Fixed
+- A dependency that was auto-expired by the time-to-live sweep no longer counts as a completed prerequisite. Before this, a work order could start as though its groundwork was done when that work had only been abandoned. Cancellations now carry why they happened (intentional, superseded, or swept), and a dependency only counts as met when it was finished or deliberately superseded.
+- `done` and `cancelled` now require a recorded reason. No more terminal work orders with no explanation of how they got there.
+- Readiness rejects a work order whose acceptance criteria are empty or just a restatement of the problem. An under-specified work order no longer reads as ready to dispatch.
+
 ## [0.36.0] - 2026-06-28
 
 ### Added
