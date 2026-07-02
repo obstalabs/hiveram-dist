@@ -2,6 +2,23 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.38.0] - 2026-07-02
+
+### Added
+- Reads tell you how much you're seeing. `list` and `search` now report the total, how many were returned, and whether more exist — so a capped page (the MCP default of 50 was the common surprise) is distinguishable from a complete result. A short notice prints when results were truncated.
+- The status check reports "waking" as well as up/down. A backend that is serving reads but whose health endpoint briefly stutters (cold start) is no longer reported as unavailable; a genuinely-down backend still is.
+- `serve` refuses to run an unauthenticated API on a non-loopback address unless you pass `--insecure-no-auth` explicitly. Local (loopback) development is unaffected.
+
+### Changed
+- Reads fail loud on backend trouble. `list`/`search`/`get`/`projects`/`stats` now return an error and a non-zero exit when the backend is unreachable, instead of an empty result that looks like "nothing found". If you relied on falling back to a local mirror on read failure, opt in with `WORKLEDGER_ALLOW_READ_MIRROR_FALLBACK=1`.
+- Changing a work order's status either applies or tells you why not (with the allowed transitions and a command to run) — it no longer quietly does nothing.
+- Errors now include the command to fix them.
+
+### Fixed
+- Delete and merge honor a work order's removal policy at the storage layer, so a protected work order can't be deleted from any surface. Merge and bulk updates are all-or-nothing, and can't sneak a work order to "done" without its close checks.
+- Over a hosted connection, an override and its reason (and close proof) reach the server instead of being dropped.
+- Connection errors no longer echo the raw database connection string. Queued offline changes surface instead of sitting unseen, and replay on reconnect without dropping anything that failed.
+
 ## [0.37.0] - 2026-06-30
 
 ### Added
