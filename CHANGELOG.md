@@ -2,6 +2,19 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.39.0] - 2026-07-03
+
+### Added
+- A blocked work order now says why it's blocked — waiting on a dependency, waiting for its commit to land, or manually held — in `get` and the compact list/search output.
+- `workledger update --delete-section` removes a section explicitly. Deleting a section used to mean passing an empty `--section key=`, which was easy to trigger by accident (a shell-mangled value would wipe content). That empty form is now rejected; use the flag when you mean to delete.
+
+### Changed
+- Creating a work order with the same title as an existing active one is refused unless you pass `--force`. This catches accidental duplicates; when a duplicate is intentional, `--force` creates it and records why. Concurrent creates of the same title can't both slip through.
+
+### Fixed
+- Merging and updating work orders enforce ownership and removal rules in one atomic step, so a merge can't partially apply or bypass a protected work order under concurrency.
+- Readiness checks no longer flag a work order for referencing a data or cross-project file it only reads — only files it's actually meant to edit.
+
 ## [0.38.0] - 2026-07-02
 
 ### Added
