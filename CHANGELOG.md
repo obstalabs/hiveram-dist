@@ -2,6 +2,16 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.40.0] - 2026-07-04
+
+### Fixed
+- Over MCP, `add_relationship` now uses the `claim_actor` you pass. It was falling back to the connection's identity, so a note or edge could be recorded as `mcp` instead of the agent that made it; `claim_override` and its reason now reach the server too.
+- An override with no reason is now rejected instead of being accepted with a filler reason. If you pass `claim_override` you must say why.
+- Notes no longer have claim bookkeeping pasted into their text. The "who claimed this" record is kept as its own note, so the note you wrote is the note that's stored — over the command line, MCP, or the API.
+- If a `create` or `link-commit` fails on a dropped connection or a 5xx, the command checks whether the write actually landed before it reports back. If it landed you get the existing item; if it didn't you get a clear "safe to retry" message instead of a guess. The landed check matches on the id or a create fingerprint, never on title alone.
+- `target-plan --wo N` now finds a work order by its id even on large projects, where it previously reported "not found" past the default page size (while `detail N` found it).
+- Readiness checks for "acceptance mentions tests/CHANGELOG/a file" now look at the work order's declared write paths when it has them, so a read-only or generated path doesn't get flagged as missing.
+
 ## [0.39.0] - 2026-07-03
 
 ### Added
