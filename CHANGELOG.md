@@ -2,6 +2,46 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.40.0] - 2026-07-04
+
+### Fixed
+- Over MCP, `add_relationship` now uses the `claim_actor` you pass. It was falling back to the connection's identity, so a note or edge could be recorded as `mcp` instead of the agent that made it; `claim_override` and its reason now reach the server too.
+- An override with no reason is now rejected instead of being accepted with a filler reason. If you pass `claim_override` you must say why.
+- Notes no longer have claim bookkeeping pasted into their text. The "who claimed this" record is kept as its own note, so the note you wrote is the note that's stored — over the command line, MCP, or the API.
+- If a `create` or `link-commit` fails on a dropped connection or a 5xx, the command checks whether the write actually landed before it reports back. If it landed you get the existing item; if it didn't you get a clear "safe to retry" message instead of a guess. The landed check matches on the id or a create fingerprint, never on title alone.
+- `target-plan --wo N` now finds a work order by its id even on large projects, where it previously reported "not found" past the default page size (while `detail N` found it).
+- Readiness checks for "acceptance mentions tests/CHANGELOG/a file" now look at the work order's declared write paths when it has them, so a read-only or generated path doesn't get flagged as missing.
+
+## [0.39.0] - 2026-07-03
+
+### Added
+- A blocked work order now says why it's blocked — waiting on a dependency, waiting for its commit to land, or manually held — in `get` and the compact list/search output.
+- `workledger update --delete-section` removes a section explicitly. Deleting a section used to mean passing an empty `--section key=`, which was easy to trigger by accident (a shell-mangled value would wipe content). That empty form is now rejected; use the flag when you mean to delete.
+
+### Changed
+- Creating a work order with the same title as an existing active one is refused unless you pass `--force`. This catches accidental duplicates; when a duplicate is intentional, `--force` creates it and records why. Concurrent creates of the same title can't both slip through.
+
+### Fixed
+- Merging and updating work orders enforce ownership and removal rules in one atomic step, so a merge can't partially apply or bypass a protected work order under concurrency.
+- Readiness checks no longer flag a work order for referencing a data or cross-project file it only reads — only files it's actually meant to edit.
+
+## [0.38.0] - 2026-07-02
+
+### Added
+- Reads tell you how much you're seeing. `list` and `search` now report the total, how many were returned, and whether more exist — so a capped page (the MCP default of 50 was the common surprise) is distinguishable from a complete result. A short notice prints when results were truncated.
+- The status check reports "waking" as well as up/down. A backend that is serving reads but whose health endpoint briefly stutters (cold start) is no longer reported as unavailable; a genuinely-down backend still is.
+- `serve` refuses to run an unauthenticated API on a non-loopback address unless you pass `--insecure-no-auth` explicitly. Local (loopback) development is unaffected.
+
+### Changed
+- Reads fail loud on backend trouble. `list`/`search`/`get`/`projects`/`stats` now return an error and a non-zero exit when the backend is unreachable, instead of an empty result that looks like "nothing found". If you relied on falling back to a local mirror on read failure, opt in with `WORKLEDGER_ALLOW_READ_MIRROR_FALLBACK=1`.
+- Changing a work order's status either applies or tells you why not (with the allowed transitions and a command to run) — it no longer quietly does nothing.
+- Errors now include the command to fix them.
+
+### Fixed
+- Delete and merge honor a work order's removal policy at the storage layer, so a protected work order can't be deleted from any surface. Merge and bulk updates are all-or-nothing, and can't sneak a work order to "done" without its close checks.
+- Over a hosted connection, an override and its reason (and close proof) reach the server instead of being dropped.
+- Connection errors no longer echo the raw database connection string. Queued offline changes surface instead of sitting unseen, and replay on reconnect without dropping anything that failed.
+
 ## [0.37.0] - 2026-06-30
 
 ### Added
