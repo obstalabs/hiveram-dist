@@ -2,6 +2,61 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.43.2] - 2026-07-11
+
+### Added
+- A new `--no-outbox` flag skips the passive offline-queue status check for latency-sensitive and headless callers, so a slow or stale local queue no longer adds time to every command.
+
+### Changed
+- Work order changes over the command line, HTTP API, and MCP now go through one shared path, so claim, closure, and audit behavior is identical no matter which surface you use.
+
+### Fixed
+- Invalid requests — a missing project, a non-positive id, a missing claim actor, or bad relationship ids — now return a clear `400 Bad Request` instead of a `500` server error.
+- Audit and closure notes that fail to save are now reported instead of being silently dropped, so a rejected note can no longer look like a clean success.
+
+## [0.43.1] - 2026-07-09
+
+### Fixed
+- Listing work orders over the HTTP API with quality, complexity, or title filters now pages through large projects instead of stalling.
+
+## [0.43.0] - 2026-07-09
+
+### Added
+- `wolint --diff <base>..<head>` and `--staged` check that the changed lines of a diff carry a work-order citation — across Go, Swift, TypeScript, Python, and shell — so provenance is enforced on what actually changed.
+- `reaped` lists work orders that were auto-cancelled by TTL, with a stable age, so you can review and reopen them.
+
+### Fixed
+- TTL auto-cancel now measures from last meaningful activity, not creation time, and a reopened work order stays open instead of being swept again on the next tick.
+- Reopening a work order out of a terminal state clears its old cancel reason, so it never carries a stale "why it was cancelled".
+- Closure and transition errors now name the exact next command (inspect / retry / land) instead of a bare rejection.
+- Outbox `status` and `list` honor `--format oneline|tsv` and keep their advisory banner on stderr, so read output stays parseable.
+
+## [0.42.0] - 2026-07-08
+
+### Added
+- `next` and `context` now show parallel-dispatch lanes when two or more independent work orders are ready, so a safe parallel set is visible at a glance.
+- `next-parallel` leads with the runnable clusters and summarizes the rest, with full detail behind `--verbose`; `--wos` explains pairwise write-path overlap for a set you supply.
+- `guardrail worktree-clean`, with a sourced shell hook, detects and blocks a dirty branch switch in a marked shared checkout.
+
+### Fixed
+- `context` reports exact project, status, and priority totals while keeping output bounded.
+- Outbox terminal-row pruning verifies the target write actually landed before dropping a row, so an unsynced change is never silently discarded.
+- Creating a work order over MCP against the HTTP store now decodes correctly.
+
+## [0.41.0] - 2026-07-07
+
+### Added
+- A new `status` command and `/status` API endpoint show velocity (closed in 7 and 30 days), remaining backlog by state, a runway estimate, and how long items have sat in holding states — so completion drift is visible instead of silent.
+- `reconcile` finds and clears status-vs-git drift for work orders left in `ready_to_land` after a squash merge, so a merged item does not sit falsely open.
+- `friction` records internal-tooling friction as tagged work orders and groups repeats by tool and error.
+- `create` gains a strict contract mode that refuses work orders whose acceptance needs files missing from the write contract; the default stays advisory.
+- `unlink-commit` removes or atomically replaces a stale linked commit with a required audit reason.
+
+### Fixed
+- `unlink-commit` refuses to strip the last linked commit from a done work order unless you pass an audited override, so a completion cannot be left with no evidence.
+- Rocket-ready file matching accepts dot-prefixed directories and basename-only references when they unambiguously point at a contracted file.
+- `target-plan` resolves an explicit work order by id even on large projects, and tells backend timeouts apart from empty results.
+
 ## [0.40.0] - 2026-07-04
 
 ### Fixed
