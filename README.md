@@ -44,6 +44,12 @@ Hiveram supports portable reasoning and disconnected transfer as an explicit wor
 
 If you want to keep the ledger in your own infrastructure, start with the [self-hosted deployment guide](docs/self-hosted.md). It explains the remote path, runtime modes, verification surfaces, and how Hiveram's PostgreSQL support boundary maps to the public [PostgreSQL support matrix](docs/postgres-support.md).
 
+Deployment and integration references:
+
+- [Container image facts](docs/container-image.md)
+- [HTTP OpenAPI contract facts](docs/openapi.md)
+- [Python HTTP API quickstart](docs/examples/http-api-python/README.md)
+
 For the deeper product contract behind those operator surfaces, read
 [Context Mobility and Deployment Topologies](docs/context-mobility.md). That
 document explains the difference between NR-only, Hiveram-only, and hybrid
@@ -84,31 +90,65 @@ scoop install workledger
 If you prefer not to pipe to bash:
 
 ```bash
-# 1. Download the tarball for your platform
-# macOS Apple Silicon
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.15.0/workledger_0.15.0_darwin_arm64.tar.gz
+set -euo pipefail
 
-# macOS Intel
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.15.0/workledger_0.15.0_darwin_amd64.tar.gz
+# 1. Resolve the current strict-SemVer release and this machine's archive.
+latest_url="https://github.com/obstalabs/hiveram-dist/releases/latest"
+resolved_url="$(curl --fail --silent --show-error --location --output /dev/null --write-out '%{url_effective}' "$latest_url")"
+release_tag="${resolved_url##*/}"
+if [[ ! "$release_tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+    printf 'latest release is not strict vX.Y.Z SemVer: %s\n' "$release_tag" >&2
+    exit 1
+fi
+version="${release_tag#v}"
 
-# Linux amd64
-curl -LO https://github.com/obstalabs/hiveram-dist/releases/download/v0.15.0/workledger_0.15.0_linux_amd64.tar.gz
+case "$(uname -s):$(uname -m)" in
+    Darwin:arm64) platform="darwin_arm64" ;;
+    Darwin:x86_64) platform="darwin_amd64" ;;
+    Linux:arm64|Linux:aarch64) platform="linux_arm64" ;;
+    Linux:x86_64|Linux:amd64) platform="linux_amd64" ;;
+    *) printf 'unsupported platform: %s\n' "$(uname -s):$(uname -m)" >&2; exit 1 ;;
+esac
 
-# 2. Verify checksum
-sha256sum -c checksums.txt
+archive="workledger_${version}_${platform}.tar.gz"
+download_url="https://github.com/obstalabs/hiveram-dist/releases/download/${release_tag}"
 
-# 3. Extract and install
-tar -xzf workledger_*.tar.gz
-sudo mv workledger /usr/local/bin/
-chmod +x /usr/local/bin/workledger
+# 2. Download exactly the selected archive and its checksum manifest.
+curl --fail --show-error --location --remote-name "${download_url}/${archive}"
+curl --fail --show-error --location --remote-name "${download_url}/checksums.txt"
 
-# 4. Copy skills
+# 3. Select one exact lowercase SHA-256 row and verify it with the host tool.
+if ! checksum_row="$(awk -v archive="$archive" '
+    NF == 2 && $2 == archive && length($1) == 64 && $1 !~ /[^0-9a-f]/ { matches++; row=$0 }
+    END { if (matches != 1) exit 1; print row }
+' checksums.txt)"; then
+    printf 'checksums.txt must contain one exact SHA-256 row for %s\n' "$archive" >&2
+    exit 1
+fi
+
+if command -v sha256sum >/dev/null 2>&1; then
+    printf '%s\n' "$checksum_row" | sha256sum --check -
+elif command -v shasum >/dev/null 2>&1; then
+    printf '%s\n' "$checksum_row" | shasum --algorithm 256 --check -
+else
+    printf 'install sha256sum or shasum to verify the release\n' >&2
+    exit 1
+fi
+
+# 4. Extract into a temporary directory and install the verified binary.
+extract_dir="$(mktemp -d)"
+trap 'rm -rf "$extract_dir"' EXIT
+tar -xzf "$archive" -C "$extract_dir"
+sudo install -m 0755 "$extract_dir/workledger" /usr/local/bin/workledger
+workledger version
+
+# 5. Copy skills
 for skill in workledger write-wo load-context wrapup save-memory; do
     mkdir -p ~/.claude/skills/$skill
     curl -fsSL -o ~/.claude/skills/$skill/SKILL.md             "https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/skills/$skill/SKILL.md"
 done
 
-# 5. Configure connection details
+# 6. Configure connection details
 mkdir -p ~/.workledger
 cat > ~/.workledger/api-key.env << 'EOF'
 export WORKLEDGER_URL='https://workledger.example.com'
