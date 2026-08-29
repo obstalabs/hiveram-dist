@@ -49,9 +49,11 @@ RESPONSE_READ_CHUNK_BYTES = 16_384
 MAX_RESOLVED_ADDRESSES = 16
 # one quarter of a short budget, capped at 250ms, is reserved for kill/reap.
 RESOLVER_REAP_BUDGET_FRACTION = 0.25
+# cap resolver cleanup so it cannot consume the request deadline.
 RESOLVER_REAP_BUDGET_MAX_SECONDS = 0.25
 # IPv6 flow labels are 20-bit and interface scope IDs are unsigned 32-bit.
 MAX_IPV6_FLOWINFO = (1 << 20) - 1
+# reject IPv6 scope IDs outside the kernel's unsigned range.
 MAX_IPV6_SCOPE_ID = (1 << 32) - 1
 # resolution runs without credentials and is killed and reaped at the deadline.
 RESOLVER_CODE = """
