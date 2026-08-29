@@ -2,6 +2,12 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.55.0] - 2026-08-29
+
+### Added
+- Self-hosted Kubernetes deployments can use a dependency-free Helm chart with immutable image selection, existing Secret references, fixed restricted Pod Security controls, external PostgreSQL, health and license-aware readiness checks, an optional migration preflight, and explicit retained-state cleanup.
+- The public distribution now carries the maintained release history and the tested standard-library Python HTTP API quickstart, with a release-time drift check that fails before publication when those mechanical artifacts are stale.
+
 ## [0.54.2] - 2026-08-28
 
 ### Note
