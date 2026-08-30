@@ -1,0 +1,422 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  manual-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Validate and execute manual install
+        run: |
+          set -euo pipefail
+          installer="$RUNNER_TEMP/manual-install.sh"
+          python3 - "$installer" <<'PY'
+          import hashlib
+          from pathlib import Path
+          import sys
+
+          def extract_manual_install(readme_bytes: bytes) -> bytes:
+              try:
+                  readme_bytes.decode("utf-8", errors="strict")
+              except UnicodeDecodeError as error:
+                  raise ValueError("README is not strict UTF-8") from error
+              if b"\r" in readme_bytes:
+                  raise ValueError("README contains a carriage return")
+
+              heading = b"## Manual install"
+              if readme_bytes.count(heading) != 1:
+                  raise ValueError("README must contain exactly one manual-install heading")
+              section = readme_bytes.split(heading, 1)[1].split(b"\n## ", 1)[0]
+              lines = section.split(b"\n")
+              fence_lines = [
+                  (line_number, line)
+                  for line_number, line in enumerate(lines)
+                  if b"```" in line or b"~~~" in line
+              ]
+              if len(fence_lines) != 2:
+                  raise ValueError("manual-install fence lines are missing or duplicated")
+              opening, closing = fence_lines
+              if (
+                  opening[1] != b"```bash"
+                  or closing[1] != b"```"
+                  or opening[0] >= closing[0]
+              ):
+                  raise ValueError("manual-install fence lines are not exact and standalone")
+              return b"\n".join(lines[opening[0] + 1 : closing[0]])
+
+          def extract_pinned_manual_install(
+              readme_bytes: bytes,
+              expected_readme_sha256: str,
+          ) -> bytes:
+              if hashlib.sha256(readme_bytes).hexdigest() != expected_readme_sha256:
+                  raise ValueError("complete README SHA-256 drifted")
+              return extract_manual_install(readme_bytes)
+
+          def assert_rejected(label: str, candidate: bytes) -> None:
+              try:
+                  extract_manual_install(candidate)
+              except ValueError:
+                  return
+              raise AssertionError(f"{label} README mutation was accepted")
+
+          def assert_pinned_rejected(
+              label: str,
+              candidate: bytes,
+              expected_readme_sha256: str,
+          ) -> None:
+              try:
+                  extract_pinned_manual_install(candidate, expected_readme_sha256)
+              except ValueError:
+                  return
+              raise AssertionError(f"{label} README mutation was accepted")
+
+          sample = b"## Manual install\n\n```bash\nprintf ok\n```\n\n## Next\n"
+          close = b"\n```\n\n## Next"
+          adversarial = (
+              ("suffixed close", sample.replace(close, b"\n```sh\n\n## Next", 1)),
+              ("malformed close", sample.replace(close, b"\n````\n\n## Next", 1)),
+              ("prefixed close", sample.replace(close, b"\ntext```\n\n## Next", 1)),
+              (
+                  "duplicate opening",
+                  sample.replace(b"\n```bash\n", b"\n```bash\n```bash\n", 1),
+              ),
+              (
+                  "additional fence",
+                  sample.replace(close, b"\n```\n\n```text\nignored\n```\n\n## Next", 1),
+              ),
+              (
+                  "additional tilde fence",
+                  sample.replace(close, b"\n```\n\n~~~bash\nignored\n~~~\n\n## Next", 1),
+              ),
+              ("CRLF", sample.replace(b"\n", b"\r\n")),
+              ("lone CR", sample.replace(b"\n", b"\r")),
+              ("invalid UTF-8", sample + b"\xff"),
+          )
+          for label, candidate in adversarial:
+              assert_rejected(label, candidate)
+
+          sample_digest = hashlib.sha256(sample).hexdigest()
+          wrapper_adversarial = (
+              (
+                  "HTML comment wrapper",
+                  sample.replace(
+                      b"## Manual install",
+                      b"<!--\n## Manual install",
+                      1,
+                  ).replace(b"## Next\n", b"## Next\n-->\n", 1),
+              ),
+              (
+                  "hidden div wrapper",
+                  sample.replace(
+                      b"## Manual install",
+                      b"<div hidden>\n## Manual install",
+                      1,
+                  ).replace(b"## Next\n", b"## Next\n</div>\n", 1),
+              ),
+              (
+                  "details wrapper",
+                  sample.replace(
+                      b"## Manual install",
+                      b"<details>\n## Manual install",
+                      1,
+                  ).replace(b"## Next\n", b"## Next\n</details>\n", 1),
+              ),
+              (
+                  "outer backtick fence wrapper",
+                  sample.replace(
+                      b"## Manual install",
+                      b"````markdown\n## Manual install",
+                      1,
+                  ).replace(b"## Next\n", b"## Next\n````\n", 1),
+              ),
+              (
+                  "outer tilde fence wrapper",
+                  sample.replace(
+                      b"## Manual install",
+                      b"~~~markdown\n## Manual install",
+                      1,
+                  ).replace(b"## Next\n", b"## Next\n~~~\n", 1),
+              ),
+          )
+          for label, candidate in wrapper_adversarial:
+              assert_pinned_rejected(label, candidate, sample_digest)
+
+          readme_bytes = Path("README.md").read_bytes()
+          expected_readme_sha256 = "0f4017f32ad4d131740fd1dfec6c55d003de08d0277f02ab6059045853e59c49"
+          Path(sys.argv[1]).write_bytes(
+              extract_pinned_manual_install(readme_bytes, expected_readme_sha256)
+          )
+          PY
+          bash -n "$installer"
+          printf '%s  %s\n' \
+            '3c1768878df900c6260ff6589ae755edc7004bed9bb8c7e0f9bd857e774ea0bf' \
+            "$installer" | sha256sum --check -
+
+          fixture_root="$(mktemp -d "$RUNNER_TEMP/manual-install.XXXXXX")"
+          cleanup() {
+            local status=$?
+            trap - EXIT
+            /bin/rm -rf -- "$fixture_root"
+            exit "$status"
+          }
+          trap cleanup EXIT
+
+          fake_bin="$fixture_root/bin"
+          home_dir="$fixture_root/home"
+          work_dir="$fixture_root/work"
+          temp_dir="$fixture_root/tmp"
+          action_log="$fixture_root/actions.tsv"
+          expected_trace="$fixture_root/actions.expected.tsv"
+          verified_sentinel="$fixture_root/checksum.verified"
+          extract_dir="$fixture_root/extract"
+          mkdir -p "$fake_bin" "$home_dir" "$work_dir" "$temp_dir"
+
+          cat > "$fake_bin/manual-install-fake" <<'FAKE'
+          #!/bin/bash
+          set -euo pipefail
+
+          name="${0##*/}"
+          {
+            printf '%s' "$name"
+            for argument in "$@"; do
+              printf '\t%q' "$argument"
+            done
+            printf '\n'
+          } >> "$MANUAL_ACTION_LOG"
+
+          verify_checksum() {
+            local checksum_row extra
+            IFS= read -r checksum_row
+            [[ "$checksum_row" == "$MANUAL_ARCHIVE_SHA256  $MANUAL_ARCHIVE" ]] || exit 90
+            if IFS= read -r extra; then
+              exit 91
+            fi
+            : > "$MANUAL_VERIFIED_SENTINEL"
+            printf '%s: OK\n' "$MANUAL_ARCHIVE"
+          }
+
+          case "$name" in
+            uname)
+              [[ "$#" -eq 1 ]] || exit 92
+              case "$1" in
+                -s) printf 'Linux\n' ;;
+                -m) printf 'x86_64\n' ;;
+                *) exit 93 ;;
+              esac
+              ;;
+            curl)
+              if [[ "$#" -eq 9
+                && "$1" == "--fail"
+                && "$2" == "--silent"
+                && "$3" == "--show-error"
+                && "$4" == "--location"
+                && "$5" == "--output"
+                && "$6" == "/dev/null"
+                && "$7" == "--write-out"
+                && "$8" == "%{url_effective}"
+                && "$9" == "$MANUAL_LATEST_URL" ]]; then
+                printf '%s' "$MANUAL_RESOLVED_URL"
+              elif [[ "$#" -eq 5
+                && "$1" == "--fail"
+                && "$2" == "--show-error"
+                && "$3" == "--location"
+                && "$4" == "--remote-name"
+                && "$5" == "$MANUAL_DOWNLOAD_URL/$MANUAL_ARCHIVE" ]]; then
+                [[ "$PWD" == "$MANUAL_WORK_DIR" ]] || exit 94
+                : > "$MANUAL_ARCHIVE"
+              elif [[ "$#" -eq 5
+                && "$1" == "--fail"
+                && "$2" == "--show-error"
+                && "$3" == "--location"
+                && "$4" == "--remote-name"
+                && "$5" == "$MANUAL_DOWNLOAD_URL/checksums.txt" ]]; then
+                [[ "$PWD" == "$MANUAL_WORK_DIR" ]] || exit 95
+                printf '%s  %s\n' "$MANUAL_ARCHIVE_SHA256" "$MANUAL_ARCHIVE" > checksums.txt
+              elif [[ "$#" -eq 4
+                && "$1" == "-fsSL"
+                && "$2" == "-o"
+                && "$3" == "$MANUAL_HOME_DIR"/.claude/skills/*/SKILL.md
+                && "$4" == https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/skills/*/SKILL.md ]]; then
+                output_skill="${3%/SKILL.md}"
+                output_skill="${output_skill##*/}"
+                url_skill="${4%/SKILL.md}"
+                url_skill="${url_skill##*/}"
+                [[ "$output_skill" == "$url_skill" ]] || exit 96
+                : > "$3"
+              else
+                exit 97
+              fi
+              ;;
+            sha256sum)
+              [[ "$#" -eq 2 && "$1" == "--check" && "$2" == "-" ]] || exit 98
+              verify_checksum
+              ;;
+            shasum)
+              [[ "$#" -eq 4 && "$1" == "--algorithm" && "$2" == "256"
+                && "$3" == "--check" && "$4" == "-" ]] || exit 99
+              verify_checksum
+              ;;
+            tar)
+              [[ -f "$MANUAL_VERIFIED_SENTINEL" ]] || exit 100
+              [[ "$#" -eq 4 && "$1" == "-xzf" && "$2" == "$MANUAL_ARCHIVE"
+                && "$3" == "-C" && "$4" == "$MANUAL_EXTRACT_DIR" ]] || exit 101
+              /bin/mkdir -p "$MANUAL_EXTRACT_DIR"
+              : > "$MANUAL_EXTRACT_DIR/workledger"
+              ;;
+            sudo)
+              [[ -f "$MANUAL_VERIFIED_SENTINEL" ]] || exit 102
+              [[ "$#" -eq 5 && "$1" == "install" ]] || exit 103
+              "$@"
+              ;;
+            install)
+              [[ -f "$MANUAL_VERIFIED_SENTINEL" ]] || exit 104
+              [[ "$#" -eq 4 && "$1" == "-m" && "$2" == "0755"
+                && "$3" == "$MANUAL_EXTRACT_DIR/workledger"
+                && "$4" == "/usr/local/bin/workledger" ]] || exit 105
+              ;;
+            workledger)
+              [[ "$#" -eq 1 && "$1" == "version" ]] || exit 106
+              printf 'workledger fixture\n'
+              ;;
+            mktemp)
+              [[ "$#" -eq 1 && "$1" == "-d" ]] || exit 107
+              /bin/mkdir "$MANUAL_EXTRACT_DIR"
+              printf '%s\n' "$MANUAL_EXTRACT_DIR"
+              ;;
+            mkdir)
+              for argument in "$@"; do
+                case "$argument" in
+                  -p|"$MANUAL_HOME_DIR"/*) ;;
+                  *) exit 108 ;;
+                esac
+              done
+              /bin/mkdir "$@"
+              ;;
+            chmod)
+              [[ "$#" -eq 2 && "$1" == "600"
+                && "$2" == "$MANUAL_HOME_DIR"/.workledger/api-key.env ]] || exit 109
+              /bin/chmod "$@"
+              ;;
+            rm)
+              [[ "$#" -eq 2 && "$1" == "-rf" && "$2" == "$MANUAL_EXTRACT_DIR" ]] || exit 110
+              /bin/rm "$@"
+              ;;
+            awk) exec /usr/bin/awk "$@" ;;
+            cat) exec /bin/cat "$@" ;;
+            *) exit 111 ;;
+          esac
+          FAKE
+          chmod 0755 "$fake_bin/manual-install-fake"
+          for command_name in uname curl sha256sum shasum tar sudo install workledger mktemp mkdir chmod rm awk cat; do
+            ln -s manual-install-fake "$fake_bin/$command_name"
+          done
+
+          release_tag="v9.8.7"
+          archive="workledger_9.8.7_linux_amd64.tar.gz"
+          latest_url="https://github.com/obstalabs/hiveram-dist/releases/latest"
+          resolved_url="https://github.com/obstalabs/hiveram-dist/releases/tag/$release_tag"
+          download_url="https://github.com/obstalabs/hiveram-dist/releases/download/$release_tag"
+          archive_sha256="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+          repository_status_before="$(git status --porcelain=v1 --untracked-files=all)"
+
+          (
+            cd "$work_dir"
+            env -i \
+              HOME="$home_dir" \
+              LC_ALL=C \
+              MANUAL_ACTION_LOG="$action_log" \
+              MANUAL_ARCHIVE="$archive" \
+              MANUAL_ARCHIVE_SHA256="$archive_sha256" \
+              MANUAL_DOWNLOAD_URL="$download_url" \
+              MANUAL_EXTRACT_DIR="$extract_dir" \
+              MANUAL_HOME_DIR="$home_dir" \
+              MANUAL_LATEST_URL="$latest_url" \
+              MANUAL_RESOLVED_URL="$resolved_url" \
+              MANUAL_VERIFIED_SENTINEL="$verified_sentinel" \
+              MANUAL_WORK_DIR="$work_dir" \
+              PATH="$fake_bin" \
+              TMPDIR="$temp_dir" \
+              /bin/bash "$installer"
+          )
+          test -f "$verified_sentinel"
+
+          append_expected() {
+            local name="$1"
+            shift
+            {
+              printf '%s' "$name"
+              for argument in "$@"; do
+                printf '\t%q' "$argument"
+              done
+              printf '\n'
+            } >> "$expected_trace"
+          }
+          : > "$expected_trace"
+          awk_program=$'\n    NF == 2 && $2 == archive && length($1) == 64 && $1 !~ /[^0-9a-f]/ { matches++; row=$0 }\n    END { if (matches != 1) exit 1; print row }\n'
+          append_expected curl --fail --silent --show-error --location --output /dev/null --write-out '%{url_effective}' "$latest_url"
+          append_expected uname -s
+          append_expected uname -m
+          append_expected curl --fail --show-error --location --remote-name "$download_url/$archive"
+          append_expected curl --fail --show-error --location --remote-name "$download_url/checksums.txt"
+          append_expected awk -v "archive=$archive" "$awk_program" checksums.txt
+          append_expected sha256sum --check -
+          append_expected mktemp -d
+          append_expected tar -xzf "$archive" -C "$extract_dir"
+          append_expected sudo install -m 0755 "$extract_dir/workledger" /usr/local/bin/workledger
+          append_expected install -m 0755 "$extract_dir/workledger" /usr/local/bin/workledger
+          append_expected workledger version
+          for skill in workledger write-wo load-context wrapup save-memory; do
+            append_expected mkdir -p "$home_dir/.claude/skills/$skill"
+            append_expected curl -fsSL -o "$home_dir/.claude/skills/$skill/SKILL.md" \
+              "https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/skills/$skill/SKILL.md"
+          done
+          append_expected mkdir -p "$home_dir/.workledger"
+          append_expected cat
+          append_expected chmod 600 "$home_dir/.workledger/api-key.env"
+          append_expected rm -rf "$extract_dir"
+          diff -u "$expected_trace" "$action_log"
+
+          cat > "$fixture_root/home.expected" <<'EOF'
+          .claude/skills/load-context/SKILL.md
+          .claude/skills/save-memory/SKILL.md
+          .claude/skills/workledger/SKILL.md
+          .claude/skills/wrapup/SKILL.md
+          .claude/skills/write-wo/SKILL.md
+          .workledger/api-key.env
+          .zshrc
+          EOF
+          find "$home_dir" -type f -print | sed "s#^$home_dir/##" | LC_ALL=C sort > "$fixture_root/home.actual"
+          diff -u "$fixture_root/home.expected" "$fixture_root/home.actual"
+          printf '%s\n' "$archive" checksums.txt | LC_ALL=C sort > "$fixture_root/work.expected"
+          find "$work_dir" -type f -print | sed "s#^$work_dir/##" | LC_ALL=C sort > "$fixture_root/work.actual"
+          diff -u "$fixture_root/work.expected" "$fixture_root/work.actual"
+          test ! -e "$extract_dir"
+          test -z "$(find "$temp_dir" -mindepth 1 -print -quit)"
+          repository_status_after="$(git status --porcelain=v1 --untracked-files=all)"
+          test "$repository_status_after" = "$repository_status_before"
+
+  python-quickstart:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Test Python HTTP API quickstart
+        run: |
+          python3 -m py_compile docs/examples/http-api-python/quickstart.py
+          python3 docs/examples/http-api-python/quickstart.py --help
+          python3 -m unittest docs/examples/http-api-python/quickstart_test.py
