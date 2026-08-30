@@ -33,29 +33,29 @@ from urllib.request import (
 )
 
 
-# keep the copy-and-run default local unless the operator names a tenant.
+# WO-1932@v2: local endpoint by default
 DEFAULT_BASE_URL = "http://localhost:8080"
-# bound the example claim instead of creating an indefinite lease.
+# WO-1932@v2: claims expire by default
 DEFAULT_LEASE_MINUTES = 30
-# every network wait in the quickstart has a finite client budget.
+# WO-1932@v2: requests always time out
 REQUEST_TIMEOUT_SECONDS = 10
-# successful envelopes have a finite memory and wire budget.
+# WO-1963@v11: successful bodies stay bounded
 MAX_SUCCESS_BODY_BYTES = 1_048_576
-# diagnostics need less space and must not become an unbounded error sink.
+# WO-1963@v11: error bodies stay bounded
 MAX_ERROR_BODY_BYTES = 65_536
-# small incremental reads let the absolute deadline interrupt trickle bodies.
+# WO-1963@v11: stream reads remain interruptible
 RESPONSE_READ_CHUNK_BYTES = 16_384
-# reject pathological resolver output instead of trusting an unbounded address set.
+# WO-1963@v11: resolver output stays bounded
 MAX_RESOLVED_ADDRESSES = 16
-# one quarter of a short budget, capped at 250ms, is reserved for kill/reap.
+# WO-1963@v11: cleanup keeps deadline budget
 RESOLVER_REAP_BUDGET_FRACTION = 0.25
-# cap resolver cleanup so it cannot consume the request deadline.
+# WO-1963@v11: cleanup time stays capped
 RESOLVER_REAP_BUDGET_MAX_SECONDS = 0.25
-# IPv6 flow labels are 20-bit and interface scope IDs are unsigned 32-bit.
+# WO-1963@v11: IPv6 flow labels stay valid
 MAX_IPV6_FLOWINFO = (1 << 20) - 1
-# reject IPv6 scope IDs outside the kernel's unsigned range.
+# WO-1963@v11: IPv6 scope IDs stay valid
 MAX_IPV6_SCOPE_ID = (1 << 32) - 1
-# resolution runs without credentials and is killed and reaped at the deadline.
+# WO-1963@v11: resolver receives no credentials
 RESOLVER_CODE = """
 import json
 import socket
@@ -75,23 +75,23 @@ for family, socktype, proto, _, sockaddr in socket.getaddrinfo(
         )
 print(json.dumps(rows, separators=(",", ":")))
 """
-# only writes can leave an uncertain committed outcome after response failure.
+# WO-1963@v11: uncertain writes trigger reconciliation
 MUTATION_METHODS = frozenset({"DELETE", "PATCH", "POST", "PUT"})
-# negotiate the fail-closed note route before creating lifecycle state.
+# WO-1963@v11: note retries require server support
 IDEMPOTENT_NOTE_ENDPOINT = "POST /api/v1/wo/{project}/{id}/note/idempotent"
-# match the server's bounded visible-ASCII retry-identity contract.
+# WO-1963@v11: retry keys stay wire-bounded
 MAX_IDEMPOTENCY_KEY_BYTES = 128
-# create retry identities use the server's shared visible-ASCII byte ceiling.
+# WO-1963@v11: create keys share server limit
 MAX_CREATE_IDEMPOTENCY_KEY_BYTES = MAX_IDEMPOTENCY_KEY_BYTES
-# note retry identities use the same bounded wire contract.
+# WO-1963@v11: note keys share server limit
 MAX_NOTE_IDEMPOTENCY_KEY_BYTES = MAX_IDEMPOTENCY_KEY_BYTES
-# plaintext bearer transport is local-loopback only.
+# WO-1963@v11: plaintext stays on loopback
 PLAINTEXT_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
-# bind note acknowledgements and completion reads to one exact payload.
+# WO-1963@v11: evidence acknowledgements match exactly
 EVIDENCE_NOTE_CONTENT = "Python quickstart completed execution; reviewer may close."
-# reconcile the persisted evidence produced by closure_no_code.
+# WO-1963@v11: no-code closure stays recognizable
 NO_CODE_TERMINAL_REASON = "closed as no-code work with explicit acknowledgement"
-# accept the RFC3339 forms emitted by Go while rejecting timezone-free values.
+# WO-1963@v11: timestamps require explicit timezones
 RFC3339_PATTERN = re.compile(
     r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
 )
@@ -101,7 +101,7 @@ RFC3339_PATTERN = re.compile(
 class APIError(RuntimeError):
     """Represent a known HTTP refusal without retaining credential-bearing headers."""
 
-    # expose the canonical error code while keeping bearer tokens out of diagnostics.
+    # WO-1932@v2: credentials never enter diagnostics
     def __init__(self, status: int, code: str, message: str) -> None:
         self.status = status
         self.code = code
@@ -124,7 +124,7 @@ class ResponseBodyTooLarge(RuntimeError):
     """Mark a response that exceeded its configured byte budget."""
 
 
-# every socket read recomputes the one request-wide remaining budget.
+# WO-1963@v11: reads share one deadline
 def remaining_timeout(deadline: float) -> float:
     remaining = deadline - time.monotonic()
     if remaining <= 0:
@@ -132,7 +132,7 @@ def remaining_timeout(deadline: float) -> float:
     return remaining
 
 
-# numeric and localhost origins never enter a blocking system resolver.
+# WO-1963@v11: numeric hosts skip resolution
 def direct_addresses(host: str, port: int) -> list[tuple[int, int, int, tuple[Any, ...]]]:
     if host.lower() == "localhost":
         return [
@@ -152,7 +152,7 @@ def direct_addresses(host: str, port: int) -> list[tuple[int, int, int, tuple[An
     ]
 
 
-# accept only numeric stream addresses emitted by the isolated resolver.
+# WO-1963@v11: resolver accepts numeric streams only
 def parse_resolved_addresses(
     raw: bytes,
     expected_port: int,
@@ -208,7 +208,7 @@ def parse_resolved_addresses(
     return addresses
 
 
-# resolution cannot consume the cleanup time needed to kill and reap its child.
+# WO-1963@v11: resolution reserves cleanup time
 def resolver_execution_timeout(deadline: float) -> float:
     remaining = remaining_timeout(deadline)
     reap_budget = min(
@@ -221,7 +221,7 @@ def resolver_execution_timeout(deadline: float) -> float:
     return execution_budget
 
 
-# the resolver receives no credentials and only Windows process-start authority.
+# WO-1963@v11: resolver receives no credentials
 def resolver_environment() -> dict[str, str]:
     if os.name != "nt":
         return {}
@@ -231,7 +231,7 @@ def resolver_environment() -> dict[str, str]:
     return {"SystemRoot": system_root}
 
 
-# the daemon resumes communicate so Windows joins its output reader thread.
+# WO-1963@v11: killed resolvers finish reaping
 def start_killed_resolver_reaper(process: subprocess.Popen[bytes]) -> None:
     def reap() -> None:
         process.communicate()
@@ -243,7 +243,7 @@ def start_killed_resolver_reaper(process: subprocess.Popen[bytes]) -> None:
     ).start()
 
 
-# reap synchronously only inside the request budget, otherwise in the daemon.
+# WO-1963@v11: reaping stays deadline-bounded
 def reap_killed_resolver(process: subprocess.Popen[bytes], deadline: float) -> None:
     try:
         reap_timeout = remaining_timeout(deadline)
@@ -256,7 +256,7 @@ def reap_killed_resolver(process: subprocess.Popen[bytes], deadline: float) -> N
         start_killed_resolver_reaper(process)
 
 
-# an isolated credential-free resolver is killed and always assigned a reaper.
+# WO-1963@v11: timed-out resolvers always reap
 def resolve_addresses(
     host: str,
     port: int,
@@ -458,7 +458,7 @@ URL_OPENER = build_opener(
 )
 
 
-# accept one HTTP(S) origin and refuse credential-bearing URL ambiguity.
+# WO-1963@v11: requests stay on one origin
 def validate_base_url(value: str) -> str:
     base_url = value.strip()
     if not base_url:
@@ -484,7 +484,7 @@ def validate_base_url(value: str) -> str:
     return base_url[:-1] if parsed.path == "/" else base_url
 
 
-# reject header-unsafe credentials locally without echoing their bytes.
+# WO-1963@v11: credentials never enter headers
 def validate_bearer_token(token: str, context: str) -> None:
     encoded = token.encode("utf-8")
     if not encoded:
@@ -535,7 +535,7 @@ class Config:
         )
 
 
-# parser-limit failures are undecodable bodies, not escaped mutation outcomes.
+# WO-1963@v11: parser limits become ambiguity
 def decode_response_body(raw: bytes) -> Any:
     if not raw:
         return None
@@ -545,7 +545,7 @@ def decode_response_body(raw: bytes) -> Any:
         return raw.decode("utf-8", errors="replace")
 
 
-# read at most one byte beyond the named cap under the request deadline.
+# WO-1963@v11: response reads stay bounded
 def read_bounded_body(response: Any, limit: int, deadline: float) -> bytes:
     chunks: list[bytes] = []
     remaining = limit + 1
@@ -562,7 +562,7 @@ def read_bounded_body(response: Any, limit: int, deadline: float) -> bytes:
     return body
 
 
-# longest-first replacement prevents overlapping credentials from leaking suffixes.
+# WO-1963@v11: credentials never enter diagnostics
 def redact_diagnostic(value: str, config: Config) -> str:
     redacted = value
     tokens = sorted({config.agent_token, config.reviewer_token}, key=len, reverse=True)
@@ -572,7 +572,7 @@ def redact_diagnostic(value: str, config: Config) -> str:
     return re.sub(r"authorization", "<redacted-header>", redacted, flags=re.IGNORECASE)
 
 
-# refuse redirects and classify uncertain mutation acknowledgements centrally.
+# WO-1963@v11: uncertain mutations reconcile centrally
 def request_json(
     config: Config,
     method: str,
@@ -674,34 +674,34 @@ def request_json(
     return decoded
 
 
-# reject response-shape drift before a mutation consumes missing authority.
+# WO-1932@v2: mutation responses require objects
 def require_object(value: Any, context: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise RuntimeError(f"{context} returned {type(value).__name__}, expected an object")
     return value
 
 
-# evidence reads are arrays, never silently accepted envelopes.
+# WO-1932@v2: evidence responses require arrays
 def require_list(value: Any, context: str) -> list[Any]:
     if not isinstance(value, list):
         raise RuntimeError(f"{context} returned {type(value).__name__}, expected an array")
     return value
 
 
-# quote caller-supplied project identity before constructing route paths.
+# WO-1932@v2: project names stay path-safe
 def wo_path(config: Config, wo_id: int) -> str:
     project = quote(config.project, safe="")
     return f"/api/v1/wo/{project}/{wo_id}"
 
 
-# reconciliation always returns to the authoritative WO read.
+# WO-1932@v2: reconciliation reads current authority
 def get_wo(config: Config, wo_id: int, token: str) -> dict[str, Any]:
     wo = require_object(request_json(config, "GET", wo_path(config, wo_id), token), "get WO")
     require_wo_identity(wo, config.project, wo_id, "get WO")
     return wo
 
 
-# revision and content identity travel together for deterministic mutation admission.
+# WO-1932@v2: revision and content travel together
 def mutation_authority(wo: dict[str, Any]) -> tuple[int, str]:
     rev = wo.get("rev")
     content_hash = wo.get("content_hash")
@@ -712,12 +712,12 @@ def mutation_authority(wo: dict[str, Any]) -> tuple[int, str]:
     return rev, content_hash
 
 
-# inject one timezone-aware clock into lease admission and deterministic tests.
+# WO-1963@v11: lease checks use UTC
 def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-# accept only timezone-aware RFC3339 timestamps emitted by the HTTP contract.
+# WO-1963@v11: timestamps require explicit timezones
 def parse_rfc3339(value: Any, context: str) -> datetime:
     if not isinstance(value, str) or RFC3339_PATTERN.fullmatch(value) is None:
         raise RuntimeError(f"{context} is not a timezone-aware RFC3339 timestamp")
@@ -731,7 +731,7 @@ def parse_rfc3339(value: Any, context: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-# validate durable WO identity before consuming response authority.
+# WO-1963@v11: responses must match work identity
 def require_wo_identity(
     wo: dict[str, Any], expected_project: str, expected_id: int, context: str
 ) -> None:
@@ -739,7 +739,7 @@ def require_wo_identity(
         raise RuntimeError(f"{context} names the wrong project or WO")
 
 
-# every retry identity uses one bounded visible-ASCII contract.
+# WO-1963@v11: retry keys use visible ASCII
 def validate_idempotency_key(key: str, context: str, max_bytes: int) -> None:
     encoded = key.encode("utf-8")
     if not encoded:
@@ -750,7 +750,7 @@ def validate_idempotency_key(key: str, context: str, max_bytes: int) -> None:
         raise RuntimeError(f"{context} must contain visible ASCII only")
 
 
-# expose create-key validation at the lifecycle preflight boundary.
+# WO-1963@v11: create keys validate before mutation
 def validate_create_idempotency_key(key: str) -> None:
     validate_idempotency_key(
         key,
@@ -759,7 +759,7 @@ def validate_create_idempotency_key(key: str) -> None:
     )
 
 
-# preserve the dedicated note-key validator used by callers and tests.
+# WO-1963@v11: note keys validate before mutation
 def validate_note_idempotency_key(key: str) -> None:
     validate_idempotency_key(
         key,
@@ -768,7 +768,7 @@ def validate_note_idempotency_key(key: str) -> None:
     )
 
 
-# unsafe create identity maps to one stable bounded caller key.
+# WO-1963@v11: create retries get stable keys
 def derive_create_key(project: str, run_id: str) -> str:
     candidate = f"{project}:{run_id}:create"
     try:
@@ -781,7 +781,7 @@ def derive_create_key(project: str, run_id: str) -> str:
         return derived
 
 
-# derive one stable bounded note identity before any lifecycle mutation.
+# WO-1963@v11: note retries get stable keys
 def derive_note_key(project: str, run_id: str) -> str:
     candidate = f"{project}:{run_id}:note"
     try:
@@ -794,7 +794,7 @@ def derive_note_key(project: str, run_id: str) -> str:
         return derived
 
 
-# fail before create when an old server cannot guarantee keyed note replay.
+# WO-1963@v11: unsupported note replay fails early
 def preflight_idempotent_note_route(config: Config) -> None:
     discovery = require_object(
         request_json(config, "GET", "/api/v1/discover", config.agent_token),
@@ -807,14 +807,14 @@ def preflight_idempotent_note_route(config: Config) -> None:
         )
 
 
-# invalid mutation bodies are ambiguous outcomes, not successful authority.
+# WO-1963@v11: invalid bodies remain ambiguous
 def require_mutation_object(value: Any, context: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise TransportFailure(f"{context} returned an invalid successful acknowledgement")
     return value
 
 
-# a create replay must acknowledge the exact requested project and title.
+# WO-1963@v11: create acknowledgements match exactly
 def require_create_ack(
     value: Any, expected_project: str, expected_title: str
 ) -> dict[str, Any]:
@@ -841,7 +841,7 @@ def require_create_ack(
     return result
 
 
-# claim and status acknowledgements must name exact durable authority.
+# WO-1963@v11: mutation acknowledgements match authority
 def require_wo_ack(
     value: Any,
     context: str,
@@ -885,7 +885,7 @@ def require_wo_ack(
     return wo
 
 
-# require the canonical note shape and the exact requested durable row.
+# WO-1963@v11: note acknowledgements match exact rows
 def require_exact_note(
     value: Any,
     context: str,
@@ -909,7 +909,7 @@ def require_exact_note(
     return note
 
 
-# invalid exact note acknowledgements receive only one keyed replay.
+# WO-1963@v11: invalid acknowledgements replay once
 def require_note_ack(
     value: Any, project: str, wo_id: int, content: str, idempotency_key: str
 ) -> dict[str, Any]:
@@ -926,7 +926,7 @@ def require_note_ack(
         raise TransportFailure(f"add note acknowledgement is invalid: {error}") from None
 
 
-# only validated caller-keyed writes receive one identical replay.
+# WO-1963@v11: keyed writes replay once
 def keyed_write(
     config: Config,
     method: str,
@@ -954,7 +954,7 @@ def keyed_write(
         return attempt()
 
 
-# a claim has no caller dedupe key, so inspect authority after an ambiguous response.
+# WO-1932@v2: ambiguous claims read authority
 def claim_or_reconcile(
     config: Config,
     wo: dict[str, Any],
@@ -1002,7 +1002,7 @@ def claim_or_reconcile(
         ) from None
 
 
-# updates have CAS but no dedupe key; accept only the observed target state.
+# WO-1932@v2: ambiguous updates read authority
 def update_status_or_reconcile(
     config: Config,
     wo: dict[str, Any],
@@ -1057,7 +1057,7 @@ def update_status_or_reconcile(
         ) from None
 
 
-# the preflighted route binds one exact canonical evidence note.
+# WO-1963@v11: evidence notes stay exact
 def add_evidence_note(config: Config, wo_id: int, note_key: str) -> dict[str, Any]:
     body = {
         "content": EVIDENCE_NOTE_CONTENT,
@@ -1081,7 +1081,7 @@ def add_evidence_note(config: Config, wo_id: int, note_key: str) -> dict[str, An
     )
 
 
-# a terminal replay proves completion exclusively through authoritative reads.
+# WO-1963@v11: closure needs authoritative evidence
 def read_completion_evidence(
     config: Config,
     wo_id: int,
@@ -1173,7 +1173,7 @@ def read_completion_evidence(
     }
 
 
-# demonstrate replay-safe lifecycle recovery without re-opening terminal work.
+# WO-1963@v11: terminal replays never reopen work
 def run_lifecycle(
     config: Config, *, clock: Callable[[], datetime] = utc_now
 ) -> dict[str, Any]:
@@ -1224,7 +1224,7 @@ def run_lifecycle(
     return read_completion_evidence(config, wo_id, note_key, create_result, int(note["id"]))
 
 
-# emit only non-secret lifecycle evidence for copy-and-run diagnostics.
+# WO-1932@v2: output never includes credentials
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run the Workledger HTTP API Python quickstart lifecycle."

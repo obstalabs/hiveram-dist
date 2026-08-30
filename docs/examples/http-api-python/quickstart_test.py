@@ -20,7 +20,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import ProxyHandler
 
 
-# load the copyable script without requiring a package-only filename.
+# WO-1963@v11: shipped script loads directly
 def load_quickstart() -> Any:
     path = Path(__file__).with_name("quickstart.py")
     spec = spec_from_file_location("workledger_http_quickstart", path)
@@ -50,12 +50,12 @@ TRICKLE_INTERVAL_SECONDS = 0.04
 HANDLER_STOP_TIMEOUT_SECONDS = 1.0
 
 
-# expose the fixed instant through the production clock interface.
+# WO-1963@v11: lease time stays fixed
 def fixed_clock() -> datetime:
     return FIXED_NOW
 
 
-# slow peers expose per-read timeout resets while stopping on disconnect.
+# WO-1963@v11: slow streams stop cleanly
 def trickle_bytes(connection: Any, payload: bytes, stopped: threading.Event) -> None:
     try:
         for byte in payload:
@@ -93,7 +93,7 @@ class RunningServer:
         self.thread.join(timeout=2)
 
 
-# use inert credentials while exercising the same request construction.
+# WO-1963@v11: fixture credentials stay inert
 def test_config(base_url: str = "https://127.0.0.1") -> Any:
     return quickstart.Config(
         base_url=base_url,
