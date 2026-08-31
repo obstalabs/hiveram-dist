@@ -1,9 +1,9 @@
 # Container image facts
 
-- Registry: `ghcr.io/obstalabs/workledger`.
+- Registry: `ghcr.io/obstalabs/hiveram-dist`.
 - Release selectors: immutable semantic-version tags and OCI manifest digests.
 - Release artifact: each release publishes one multi-platform OCI index for `linux/amd64` and `linux/arm64`.
-- Digest-pinned reference: `ghcr.io/obstalabs/workledger@sha256:<manifest-digest>`.
+- Digest-pinned reference: `ghcr.io/obstalabs/hiveram-dist@sha256:<manifest-digest>`.
 - Runtime base: `scratch` with CA certificates and the statically linked `workledger` binary.
 - Runtime identity: numeric UID and GID `65532:65532`.
 - Entrypoint: `/workledger`.
