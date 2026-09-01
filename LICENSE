@@ -1,24 +1,35 @@
-Copyright (c) 2026 Obsta Labs LLC. All rights reserved.
+Hiveram — Commercial Distribution License
 
-This repository contains proprietary distribution artifacts for Hiveram,
-including release binaries, installer scripts, public-safe skill files,
-and related documentation.
+Copyright (c) 2026 OBSTA LABS PTE. LTD., Singapore. All rights reserved.
+
+This repository distributes proprietary artifacts for Hiveram, including
+release binaries, container images, Helm charts, installer assets,
+public-safe skill files, and related documentation ("Artifacts"). The
+Artifacts are licensed, not sold.
 
 No right is granted to use, copy, modify, merge, publish, distribute,
 sublicense, sell, reverse engineer, create derivative works from, or
 otherwise exploit any part of this repository except as expressly allowed
-by a valid commercial agreement, trial entitlement, or other written
-permission from Obsta Labs LLC.
+by a valid commercial agreement, subscription, trial entitlement, or other
+written permission from OBSTA LABS PTE. LTD., Singapore.
 
-The Hiveram/workledger source code is private and is not distributed from
-this repository.
+No open-source license applies to the Artifacts. They are not licensed
+under the MIT License, the GNU GPL or AGPL, or any other open-source
+license, and no such license is granted by implication, estoppel, or
+otherwise.
 
-THE MATERIALS IN THIS REPOSITORY ARE PROVIDED "AS IS", WITHOUT WARRANTY OF
-ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN
-NO EVENT SHALL OBSTA LABS LLC BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+The Hiveram and workledger source code is private and is not distributed
+from this repository.
+
+The Artifacts may include third-party components under their own license
+terms, which govern those components only.
+
+THE ARTIFACTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL
+OBSTA LABS PTE. LTD., SINGAPORE BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
-FROM, OUT OF, OR IN CONNECTION WITH THE MATERIALS OR THE USE OF OR OTHER
-DEALINGS IN THE MATERIALS.
+FROM, OUT OF, OR IN CONNECTION WITH THE ARTIFACTS OR THE USE OF OR OTHER
+DEALINGS IN THE ARTIFACTS.
 
-For licensing inquiries, contact Obsta Labs LLC via https://obstalabs.dev.
+For licensing inquiries, contact contact@obstalabs.dev.
