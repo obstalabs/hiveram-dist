@@ -2,7 +2,7 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
-## [0.55.7] - 2026-09-01
+## [0.55.8] - 2026-09-01
 
 ### Changed
 - The distribution licence has been restated to cover every artifact published here, including the container image and the Helm chart, and to name Obsta Labs Pte. Ltd., Singapore as the licensor. The terms are unchanged in substance: these artifacts are proprietary and licensed for use under a commercial agreement, subscription, or written evaluation permission.
@@ -14,7 +14,7 @@ Customer-facing release notes for Hiveram. Downloads for each version are on the
 - The Helm chart installs directly from the registry, with no download step:
 
   ```bash
-  helm install workledger oci://ghcr.io/obstalabs/charts/workledger --version 0.55.7
+  helm install workledger oci://ghcr.io/obstalabs/charts/workledger --version 0.55.8
   ```
 
   The chart tarball remains attached to every release for airgapped and mirrored
@@ -22,7 +22,12 @@ Customer-facing release notes for Hiveram. Downloads for each version are on the
 - Every release now verifies that the published image can be pulled with no credentials, on both `linux/amd64` and `linux/arm64`, before the release is announced. If an image is not reachable to an anonymous client, the release fails instead of publishing.
 
 ### Note
-- Images published at v0.55.6 and earlier are listed under the previous repository. They remain pullable at the same address and their checksums are unchanged.
+- Images published before v0.55.7 are listed under the previous repository. They remain pullable at the same address and their checksums are unchanged.
+
+## [0.55.7] - 2026-09-01
+
+### Note
+- This version published the container image only. Its release page carries no downloads; use v0.55.8, which contains the same changes with everything published.
 
 ## [0.55.6] - 2026-09-01
 
