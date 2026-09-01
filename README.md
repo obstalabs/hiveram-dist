@@ -8,11 +8,11 @@
 
 # hiveram-dist
 
-Distribution package for [Hiveram](https://hiveram.com) — agent coordination and execution intelligence. Pre-built `workledger` binaries, a public-safe skill pack, and an install script.
+Distribution package for [Hiveram](https://hiveram.com) — agent coordination and execution intelligence. Pre-built `workledger` binaries, a hardened container image, a Helm chart for Kubernetes, a public-safe skill pack, and an install script.
 
 ## What this is
 
-Pre-built binaries, a public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram setup: the `workledger` binary on PATH, MCP server wiring for Claude Code by default, and the runtime surfaces needed for shared authoritative work or intentional portable handoff.
+Pre-built binaries, a hardened multi-architecture container image, a Helm chart for Kubernetes, a public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram setup: the `workledger` binary on PATH, MCP server wiring for Claude Code by default, and the runtime surfaces needed for shared authoritative work or intentional portable handoff.
 
 Hiveram/workledger is not Claude-only. The same CLI, HTTP API, and MCP server are usable from any compatible agent surface, including Claude Code, Codex, OpenCode, Cursor, Cline, Qwen, and other MCP-capable clients. The installer automates Claude Code first because it is the safest default bootstrap path today.
 
@@ -84,6 +84,36 @@ brew install obstalabs/tap/workledger
 scoop bucket add obstalabs https://github.com/obstalabs/scoop-bucket
 scoop install workledger
 ```
+
+## Run the server
+
+The commands above install the CLI. To run the ledger service itself, pull the
+container image or deploy the Helm chart. Both are public: no registry
+credentials, no account.
+
+```bash
+# Hardened container image, linux/amd64 and linux/arm64
+docker pull ghcr.io/obstalabs/hiveram-dist:v0.55.6
+```
+
+The image is distroless, runs as a non-root user with a read-only root
+filesystem, and is admitted under restricted Pod Security Standards. See
+[container image facts](docs/container-image.md).
+
+```bash
+# Helm chart, attached to every release
+curl -fsSLO https://github.com/obstalabs/hiveram-dist/releases/download/v0.55.6/workledger-0.55.6.tgz
+
+helm install workledger ./workledger-0.55.6.tgz \
+  --namespace hiveram \
+  --set-string image.tag=v0.55.6 \
+  --set-string secrets.existingSecret=workledger-runtime
+```
+
+The chart deploys the same image against PostgreSQL you manage. It creates no
+Secret, Namespace, or cluster-scoped resource, and expects an existing Secret
+holding the connection string, licence, and API keys. Start with the
+[self-hosted deployment guide](docs/self-hosted.md).
 
 ## Manual install
 
