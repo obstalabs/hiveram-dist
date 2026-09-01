@@ -2,6 +2,17 @@
 
 Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
 
+## [0.55.6] - 2026-09-01
+
+### Added
+- The Workledger Helm chart is published as a release asset. Deploy on Kubernetes against your own PostgreSQL, with a values schema, per-value documentation, an optional migration hook, and restricted Pod Security defaults.
+
+### Changed
+- The container image is published alongside the rest of the distribution, so it can be pulled from the same place you download everything else.
+
+### Note
+- This release supersedes 0.55.0 through 0.55.5, which were tagged but never published. Install 0.55.6.
+
 ## [0.55.5] - 2026-08-31
 
 ### Added
