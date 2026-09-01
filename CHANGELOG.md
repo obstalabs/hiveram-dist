@@ -1,6 +1,6 @@
 # Changelog
 
-Customer-facing release notes for Hiveram. For the full internal development history, see the workledger repository changelog.
+Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
 ## [0.55.6] - 2026-09-01
 
