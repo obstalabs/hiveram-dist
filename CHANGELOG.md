@@ -2,6 +2,11 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.9] - 2026-09-03
+
+### Changed
+- Each release now installs the published container image into a disconnected Kubernetes node and requires it to start, using the same node-preloaded commands published in the chart's own README. The node has no route to any registry, and the release fails if the image cannot be resolved from the node alone. This proves the airgapped install path against the exact image being released rather than a rebuild of it. Currently covers `linux/amd64`; the same proof for `linux/arm64` follows. Nothing about the artifacts or the install commands changed, and no action is required.
+
 ## [0.55.8] - 2026-09-01
 
 ### Changed
