@@ -2,6 +2,11 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.12] - 2026-09-03
+
+### Note
+- Versions 0.55.9, 0.55.10 and 0.55.11 were prepared but never published, so no downloads exist for them; 0.55.12 is the first release that carries the changes listed under those entries. Nothing about the artifacts or the install commands changed, and no action is required.
+
 ## [0.55.10] - 2026-09-03
 
 ### Changed
