@@ -2,6 +2,11 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.10] - 2026-09-03
+
+### Changed
+- The install instructions on this repository's front page now lead with the registry install and no longer name a specific version, so they stay correct as releases land. The airgapped download path resolves the current release itself rather than pointing at a fixed one.
+
 ## [0.55.9] - 2026-09-03
 
 ### Changed

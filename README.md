@@ -87,33 +87,47 @@ scoop install workledger
 
 ## Run the server
 
-The commands above install the CLI. To run the ledger service itself, pull the
-container image or deploy the Helm chart. Both are public: no registry
+The commands above install the CLI. To run the ledger service itself, deploy the
+Helm chart or pull its hardened container image. Both are public: no registry
 credentials, no account.
 
+The OCI registry is the primary Kubernetes install:
+
 ```bash
-# Hardened container image, linux/amd64 and linux/arm64
-docker pull ghcr.io/obstalabs/hiveram-dist:v0.55.6
+helm install workledger oci://ghcr.io/obstalabs/charts/workledger --namespace hiveram --set-string secrets.existingSecret=workledger-runtime
 ```
 
-The image is distroless, runs as a non-root user with a read-only root
-filesystem, and is admitted under restricted Pod Security Standards. See
+The chart deploys the image against PostgreSQL you manage. It creates no Secret,
+Namespace, or cluster-scoped resource, and expects an existing Secret holding the
+connection string, licence, and API keys. Start with the
+[self-hosted deployment guide](https://github.com/obstalabs/hiveram-dist/blob/main/docs/self-hosted.md).
+
+The hardened image supports `linux/amd64` and `linux/arm64`. Select its current
+immutable tag or digest from [Releases](https://github.com/obstalabs/hiveram-dist/releases),
+then verify the runtime guarantees in the
 [container image facts](docs/container-image.md).
 
-```bash
-# Helm chart, attached to every release
-curl -fsSLO https://github.com/obstalabs/hiveram-dist/releases/download/v0.55.6/workledger-0.55.6.tgz
+For an airgapped or mirrored install, resolve and download the current release
+asset instead:
 
-helm install workledger ./workledger-0.55.6.tgz \
+```bash
+set -euo pipefail
+latest_url="https://github.com/obstalabs/hiveram-dist/releases/latest"
+resolved_url="$(curl --fail --silent --show-error --location --output /dev/null --write-out '%{url_effective}' "$latest_url")"
+release_tag="${resolved_url##*/}"
+if [[ ! "$release_tag" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+    printf 'latest release is not strict vX.Y.Z SemVer: %s\n' "$release_tag" >&2
+    exit 1
+fi
+version="${release_tag#v}"
+chart="workledger-${version}.tgz"
+curl --fail --show-error --location --remote-name \
+    "https://github.com/obstalabs/hiveram-dist/releases/download/${release_tag}/${chart}"
+helm install workledger "./${chart}" \
   --namespace hiveram \
-  --set-string image.tag=v0.55.6 \
+  --set-string image.tag="${release_tag}" \
   --set-string secrets.existingSecret=workledger-runtime
 ```
-
-The chart deploys the same image against PostgreSQL you manage. It creates no
-Secret, Namespace, or cluster-scoped resource, and expects an existing Secret
-holding the connection string, licence, and API keys. Start with the
-[self-hosted deployment guide](docs/self-hosted.md).
 
 ## Manual install
 
