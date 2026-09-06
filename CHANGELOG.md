@@ -2,6 +2,15 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.13] - 2026-09-06
+
+### Note
+- Version 0.55.12 was prepared but never published, so no downloads exist for it; like 0.55.9 through 0.55.11 before it, its changes are carried by this release. Nothing about the artifacts or the install commands changed, and no action is required.
+
+### Changed
+- Releases are no longer held back by the disconnected-node install proof introduced in 0.55.9. The proof still runs on every release and its result is recorded in the release run, but a failure in the proof itself no longer prevents the image and chart from publishing. It becomes a hard requirement again once it has passed on a real release.
+- Internal restructuring of the command-line tool's test suite so releases stop timing out at the test stage. No command, flag, or output changed.
+
 ## [0.55.12] - 2026-09-03
 
 ### Note
