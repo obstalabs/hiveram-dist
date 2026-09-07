@@ -6,7 +6,7 @@ Customer-facing release notes for Hiveram. Downloads for each version are on the
 
 ### Fixed
 - Older clients keep working after a server upgrade. Search and similar-item results are returned in the form the client understands: clients from before 0.55.10 receive complete work-order rows, and newer clients receive the compact form only when they ask for it.
-- When a client cannot read a server response, the error now says which side is older and what to do, in one sentence, instead of showing an internal row number. The same diagnostic appears in tool errors and in `workledger doctor`.
+- When a client cannot read a server response, the error now says which side is older and what to do, in one sentence, instead of showing an internal row number. The same explanation appears in tool errors and in `workledger doctor`.
 - Deployments on the hardened container image are verified over HTTPS on each running machine. Verification no longer needs SSH or a shell inside the image, which the hardened image does not provide.
 
 ## [0.55.13] - 2026-09-06
