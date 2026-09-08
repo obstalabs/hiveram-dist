@@ -2,6 +2,15 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.15] - 2026-09-08
+
+### Added
+- Task bundles handed to an automated runner now carry an explicit halt rule: if the runner meets a decision the work order does not answer, it must stop and record what was missing instead of choosing for you. The rule appears in both the readable and machine-readable forms of the bundle.
+- Work order readiness now reports two additional advisories: wording that leaves a choice to whoever picks the work up, and questions left open in the acceptance criteria. Both are advisory. They never withhold a readiness badge and they change no existing work order's state.
+
+### Changed
+- Every change to the service is now checked against the previously published client before it can be accepted. A client from the last release drives the new server over HTTP, so a change that would stop older clients reading responses is caught before it ships rather than after you upgrade.
+
 ## [0.55.14] - 2026-09-07
 
 ### Fixed
