@@ -2,6 +2,16 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.20] - 2026-09-11
+
+### Fixed
+- Completed work orders awaiting verification were being reopened instead of
+  closed. If your team squashes pull requests when merging, the check that
+  looks for the work order's commit on your main branch could never find it,
+  so finished work stayed open and eventually aged out. Verification now
+  finds the squashed commit. Work orders that genuinely never landed are
+  still reopened, as before.
+
 ## [0.55.19] - 2026-09-10
 
 ### Fixed
