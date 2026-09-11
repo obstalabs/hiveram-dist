@@ -2,6 +2,14 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.19] - 2026-09-10
+
+### Fixed
+- Searching your work orders from a connected assistant returned an error
+  instead of results. The previous release said this was fixed; duplicate
+  detection was, but search was not. It works now. No action is needed
+  beyond upgrading.
+
 ## [0.55.18] - 2026-09-10
 
 ### Fixed
