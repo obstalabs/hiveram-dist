@@ -2,6 +2,15 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.21] - 2026-09-12
+
+### Fixed
+- Verifying completed work orders reported errors for ones it had just
+  closed. The closures were correct and nothing was lost, but the run ended
+  with a list of failures that looked alarming and made real problems hard
+  to spot among them. Those false reports are gone. Genuine failures are
+  still reported.
+
 ## [0.55.20] - 2026-09-11
 
 ### Fixed
