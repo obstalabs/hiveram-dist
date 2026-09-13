@@ -2,6 +2,17 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.22] - 2026-09-13
+
+### Fixed
+- Work orders that had already been delivered were being cancelled as
+  abandoned. The automatic clean-up of stale work orders looked only at how
+  long a record had been untouched - and a finished work order is untouched
+  by definition, so completed work was the most likely to be swept away. Work
+  orders with a linked commit are now left alone. Genuinely abandoned ones
+  are still cleaned up. If this has already affected your records, they were
+  cancelled rather than deleted and can be reopened.
+
 ## [0.55.21] - 2026-09-12
 
 ### Fixed
