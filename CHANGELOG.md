@@ -2,6 +2,25 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.24] - 2026-09-14
+
+### Fixed
+- Work orders whose changes were delivered as part of a combined commit could
+  not find that commit, and were reported as having nothing landed. They are now
+  matched to the probable commit and shown as a candidate for review. The match
+  is presented as a suggestion, never treated as proof, and never completes a
+  work order on its own.
+- Verification could fail for a project whose tests pass normally, because the
+  isolated environment it ran in did not match a real one. The environment now
+  uses conventional locations, so a passing project verifies as passing.
+  Verification remains fully isolated from your own configuration.
+- Work orders that nobody had looked at yet were being cancelled automatically
+  for inactivity. For a record filed and not yet reviewed, no activity is
+  expected and says nothing about its value. Such records are now kept and the
+  skip is logged. Once anyone acts on a record - a note, a status change, any
+  edit - the usual inactivity rules resume. Records that genuinely were worked
+  and then abandoned are still cleaned up.
+
 ## [0.55.23] - 2026-09-14
 
 ### Fixed
