@@ -2,6 +2,17 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.23] - 2026-09-14
+
+### Fixed
+- When an automated agent lacked the authority to mark a work order done, the
+  refusal said only that the authority was missing and gave no way forward.
+  The message now explains the handoff: an authorized person reviews the work
+  and completes it, supplying proof that the change is on the canonical branch.
+  It also states plainly that automated agents must not grant themselves this
+  authority. The rules governing who may complete work, and what proof is
+  required, are unchanged - only the explanation improved.
+
 ## [0.55.22] - 2026-09-13
 
 ### Fixed
