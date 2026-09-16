@@ -2,6 +2,19 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.25] - 2026-09-16
+
+### Fixed
+- A work order could be saved with an invalid internal number, after which one
+  part of the system would show it and another would refuse it. Such a record is
+  now rejected when it is saved, so every view agrees on what exists.
+- A project name containing spaces could be accepted when work was first
+  recorded, producing a project that no longer matched the name anyone typed.
+  Project names are now checked at that point, and a name with spaces is
+  refused rather than quietly altered - a silently corrected name would not be
+  the one you chose. Projects you already have are unaffected and remain fully
+  readable.
+
 ## [0.55.24] - 2026-09-14
 
 ### Fixed
