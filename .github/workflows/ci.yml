@@ -403,6 +403,46 @@ jobs:
           repository_status_after="$(git status --porcelain=v1 --untracked-files=all)"
           test "$repository_status_after" = "$repository_status_before"
 
+  install-script:
+    # WO-2219: the published curl|bash form has no TTY; both paths must stay green.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Lint the installer
+        run: |
+          set -euo pipefail
+          bash -n install.sh
+          shellcheck --severity=warning install.sh
+      - name: No terminal, no values - configure phase exits 0 and says how to configure
+        run: |
+          set -euo pipefail
+          home="$(mktemp -d)"
+          out="$(env -i HOME="$home" PATH="$PATH" bash -c 'source ./install.sh; configure_connection' < /dev/null 2>&1)"
+          printf '%s\n' "$out"
+          grep -q 'no terminal available' <<<"$out"
+          grep -q 'WORKLEDGER_URL' <<<"$out"
+          test -f "$home/.workledger/api-key.env"
+          test "$(stat -c '%a' "$home/.workledger/api-key.env")" = "600"
+      - name: No terminal, values from the environment - same files as the prompts
+        run: |
+          set -euo pipefail
+          home="$(mktemp -d)"
+          env -i HOME="$home" PATH="$PATH" WORKLEDGER_URL="https://example.invalid" WORKLEDGER_API_KEY="fixture-not-a-key" \
+            bash -c 'source ./install.sh; configure_connection' < /dev/null
+          grep -q "^export WORKLEDGER_URL='https://example.invalid'$" "$home/.workledger/api-key.env"
+          grep -q "^export WORKLEDGER_API_KEY='fixture-not-a-key'$" "$home/.workledger/api-key.env"
+          test "$(stat -c '%a' "$home/.workledger/api-key.env")" = "600"
+      - name: Terminal present - the prompts still run
+        run: |
+          set -euo pipefail
+          home="$(mktemp -d)"
+          out="$(printf '3\n' | timeout 60 env -i HOME="$home" PATH="$PATH" script -qec "bash -c 'source ./install.sh; configure_connection'" /dev/null | tr -d '\r')"
+          printf '%s\n' "$out"
+          grep -q 'How will you connect' <<<"$out"
+          grep -q 'Using local SQLite' <<<"$out"
+          test -f "$home/.workledger/api-key.env"
+
   python-quickstart:
     strategy:
       fail-fast: false
