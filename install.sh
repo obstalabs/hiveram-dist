@@ -3,6 +3,13 @@ set -euo pipefail
 
 # hiveram installer
 # Usage: curl -fsSL https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/install.sh | bash
+#
+# Non-interactive use (no terminal: containers, CI, devcontainers, scripted provisioning):
+# the connection prompts are skipped. Supply the same values through the environment
+# before running the installer and they are written exactly as the prompts would write them:
+#   WORKLEDGER_URL and WORKLEDGER_API_KEY   for a hosted or customer-hosted ledger
+#   WORKLEDGER_DSN                          for direct PostgreSQL access (self-hosted / admin)
+# With none of them set, the binary and skills install and the CLI defaults to local SQLite.
 
 REPO="obstalabs/hiveram-dist"
 BINARY_NAME="workledger"
@@ -14,6 +21,8 @@ CONFIG_DIR="$HOME/.workledger"
 COLLECTED_URL=""
 COLLECTED_KEY=""
 COLLECTED_DSN=""
+# WO-2219: set when the interactive prompts were skipped because no terminal was available.
+CONFIG_SKIPPED=""
 
 # --- helpers ---
 
@@ -111,6 +120,26 @@ install_skills() {
 
 # --- phase 3: connection setup ---
 
+# WO-2219: append one export line to the secrets file unless that variable is already there.
+persist_env() {
+    local env_file="$1" name="$2" value="$3"
+    if ! grep -q "^export ${name}=" "$env_file" 2>/dev/null; then
+        echo "export ${name}='${value}'" >> "$env_file"
+    fi
+}
+
+# WO-2219: a pipe has no usable stdin, and /dev/tty can exist without being openable
+# (containers, CI runners). Probe by opening it instead of testing for the node.
+prompt_input() {
+    if [ -t 0 ]; then
+        echo "/dev/stdin"
+    elif { : < /dev/tty; } 2>/dev/null; then
+        echo "/dev/tty"
+    else
+        echo ""
+    fi
+}
+
 configure_connection() {
     info "Configuring connection"
     mkdir -p "$CONFIG_DIR"
@@ -123,16 +152,35 @@ configure_connection() {
         source "$env_file"
     fi
 
-    # When piped via curl|bash, stdin is the script itself.
-    # Read user input from /dev/tty instead.
-    if [ ! -t 0 ] && [ -e /dev/tty ]; then
-        local input="/dev/tty"
-    else
-        local input="/dev/stdin"
-    fi
+    local input
+    input="$(prompt_input)"
 
     # Connection mode: URL (recommended) or DSN (advanced)
-    if [ -z "${WORKLEDGER_URL:-}" ] && [ -z "${WORKLEDGER_DSN:-}" ]; then
+    if [ -n "${WORKLEDGER_URL:-}" ] || [ -n "${WORKLEDGER_DSN:-}" ]; then
+        if [ -n "${WORKLEDGER_URL:-}" ]; then
+            info "WORKLEDGER_URL already set"
+            COLLECTED_URL="${WORKLEDGER_URL}"
+            persist_env "$env_file" WORKLEDGER_URL "${WORKLEDGER_URL}"
+        fi
+        if [ -n "${WORKLEDGER_DSN:-}" ]; then
+            info "WORKLEDGER_DSN already set"
+            COLLECTED_DSN="${WORKLEDGER_DSN}"
+            persist_env "$env_file" WORKLEDGER_DSN "${WORKLEDGER_DSN}"
+        fi
+        if [ -n "${WORKLEDGER_API_KEY:-}" ]; then
+            COLLECTED_KEY="${WORKLEDGER_API_KEY}"
+            persist_env "$env_file" WORKLEDGER_API_KEY "${WORKLEDGER_API_KEY}"
+        fi
+    elif [ -z "$input" ]; then
+        # WO-2219: no terminal available. Say so, say how to configure, and continue.
+        CONFIG_SKIPPED="1"
+        echo ""
+        info "Connection prompts skipped: no terminal available (piped or non-interactive install)."
+        info "To configure without prompts, set these before running the installer:"
+        info "  WORKLEDGER_URL and WORKLEDGER_API_KEY   (hosted or customer-hosted ledger)"
+        info "  WORKLEDGER_DSN                          (direct PostgreSQL, self-hosted / admin)"
+        info "Until then the CLI uses local SQLite. Re-run the installer from a terminal to be prompted."
+    else
         echo ""
         echo "How will you connect to Hiveram/workledger?"
         echo "  1) HTTP API (recommended) -- customer-hosted or Obsta-managed URL + API key"
@@ -189,12 +237,11 @@ configure_connection() {
                 warn "Invalid choice -- defaulting to local SQLite"
                 ;;
         esac
-    else
-        [ -n "${WORKLEDGER_URL:-}" ] && { info "WORKLEDGER_URL already set"; COLLECTED_URL="${WORKLEDGER_URL}"; }
-        [ -n "${WORKLEDGER_DSN:-}" ] && { info "WORKLEDGER_DSN already set"; COLLECTED_DSN="${WORKLEDGER_DSN}"; }
-        [ -n "${WORKLEDGER_API_KEY:-}" ] && COLLECTED_KEY="${WORKLEDGER_API_KEY}"
     fi
 
+    # WO-2219: the secrets file must exist before its mode is set, including on the
+    # local-only and skipped paths that write nothing into it.
+    : >> "$env_file"
     chmod 600 "$env_file"
 
     # Add to shell profile if not already there
@@ -326,7 +373,10 @@ verify() {
     fi
 
     echo ""
-    if $ok; then
+    if $ok && [ -n "$CONFIG_SKIPPED" ]; then
+        # WO-2219: a distinct, documented outcome -- installed, not yet connected -- never a bare failure.
+        info "Installation complete; connection not configured (no terminal). Set WORKLEDGER_URL and WORKLEDGER_API_KEY (or WORKLEDGER_DSN) and re-run, or run 'workledger activate <key>' and configure from a terminal."
+    elif $ok; then
         info "Installation complete. Run 'workledger activate <key>' for commercial CLI use, then start Claude Code."
     else
         warn "Installation completed with warnings. Review the messages above."
@@ -352,4 +402,7 @@ main() {
     verify
 }
 
-main "$@"
+# WO-2219: run main when executed or piped, not when sourced by the CI fixtures.
+if [ -z "${BASH_SOURCE[0]:-}" ] || [ "${BASH_SOURCE[0]}" = "$0" ]; then
+    main "$@"
+fi

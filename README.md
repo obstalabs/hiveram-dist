@@ -63,6 +63,8 @@ direct-apply, receipt, and branch-history return paths.
 
 ## Quick install
 
+Prerequisites: macOS or Linux (Windows through Scoop, below) with `curl` and CA certificates installed. On Debian and Ubuntu: `sudo apt-get install -y curl ca-certificates`.
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/install.sh | bash
 ```
@@ -74,7 +76,9 @@ This will:
 4. Prompt for your Hiveram/workledger connection details and custody mode
 5. Verify the binary, skills, and startup path for the selected runtime mode
 
-Package managers:
+Without a terminal (containers, CI, scripted provisioning) step 4 is skipped and the installer says so. Set `WORKLEDGER_URL` and `WORKLEDGER_API_KEY`, or `WORKLEDGER_DSN`, in the environment before running it to configure non-interactively; the same files are written as the prompts would write.
+
+Package managers (Homebrew is itself the prerequisite and covers macOS and Linux; Scoop covers Windows):
 
 ```bash
 # Homebrew
@@ -370,6 +374,8 @@ Other agent clients can use the same binary and MCP server with their own local 
 
 ## Prerequisites
 
+- macOS or Linux with `curl` and CA certificates for the install script (Debian/Ubuntu: `sudo apt-get install -y curl ca-certificates`); Windows through Scoop
+- Homebrew, for the `brew install` path (macOS and Linux)
 - [Claude Code](https://claude.ai/claude-code) installed for the automated setup path
 - A Hiveram Pro trial or license key for commercial CLI use
 - Either a Hiveram/workledger API endpoint plus API key for shared authoritative work, or a local SQLite path for portable/offline work
