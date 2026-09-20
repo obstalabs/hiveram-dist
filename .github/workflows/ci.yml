@@ -404,7 +404,7 @@ jobs:
           test "$repository_status_after" = "$repository_status_before"
 
   install-script:
-    # WO-2219: the published curl|bash form has no TTY; both paths must stay green.
+    # the published curl|bash form has no TTY; both paths must stay green.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
