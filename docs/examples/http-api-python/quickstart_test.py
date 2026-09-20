@@ -20,7 +20,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import ProxyHandler
 
 
-# load the copyable script without requiring a package-only filename.
+# WO-1963@v11: load the copyable script without requiring a package-only filename.
 def load_quickstart() -> Any:
     path = Path(__file__).with_name("quickstart.py")
     spec = spec_from_file_location("workledger_http_quickstart", path)
@@ -35,27 +35,27 @@ def load_quickstart() -> Any:
 quickstart = load_quickstart()
 
 
-# inject one immutable instant into every lease-sensitive test.
+# WO-1963@v11: inject one immutable instant into every lease-sensitive test.
 FIXED_NOW = datetime(2026, 8, 26, 12, 0, 0, tzinfo=timezone.utc)
-# canonical server timestamps stay deterministic and timezone-aware.
+# WO-1963@v11: canonical server timestamps stay deterministic and timezone-aware.
 FUTURE_LEASE = "2026-08-26T12:30:00Z"
 NOTE_CREATED_AT = "2026-08-26T12:05:00Z"
-# trickle fixtures exceed this short request-wide budget deterministically.
+# WO-1963@v11: trickle fixtures exceed this short request-wide budget deterministically.
 DEADLINE_TEST_TIMEOUT_SECONDS = 0.15
-# resolver cleanup reserve must return before this same caller deadline.
+# WO-1963@v11: resolver cleanup reserve must return before this same caller deadline.
 RESOLVER_TEST_TIMEOUT_SECONDS = 0.5
-# every byte arrives within a socket timeout but the whole stream exceeds it.
+# WO-1963@v11: every byte arrives within a socket timeout but the whole stream exceeds it.
 TRICKLE_INTERVAL_SECONDS = 0.04
-# cleanup evidence must arrive well before a hung fixture could mask failure.
+# WO-1963@v11: cleanup evidence must arrive well before a hung fixture could mask failure.
 HANDLER_STOP_TIMEOUT_SECONDS = 1.0
 
 
-# expose the fixed instant through the production clock interface.
+# WO-1963@v11: expose the fixed instant through the production clock interface.
 def fixed_clock() -> datetime:
     return FIXED_NOW
 
 
-# slow peers expose per-read timeout resets while stopping on disconnect.
+# WO-1963@v11: slow peers expose per-read timeout resets while stopping on disconnect.
 def trickle_bytes(connection: Any, payload: bytes, stopped: threading.Event) -> None:
     try:
         for byte in payload:
@@ -67,33 +67,33 @@ def trickle_bytes(connection: Any, payload: bytes, stopped: threading.Event) -> 
         stopped.set()
 
 
-# real loopback servers prove redirect refusal before a second request exists.
+# WO-1963@v11: real loopback servers prove redirect refusal before a second request exists.
 class RunningServer:
-    # bind only an ephemeral loopback port for deterministic local isolation.
+    # WO-1963@v11: bind only an ephemeral loopback port for deterministic local isolation.
     def __init__(self, handler: type[BaseHTTPRequestHandler]) -> None:
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
         self.server.daemon_threads = True
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
 
     @property
-    # expose only the loopback origin selected by the operating system.
+    # WO-1963@v11: expose only the loopback origin selected by the operating system.
     def url(self) -> str:
         host, port = self.server.server_address
         return f"http://{host}:{port}"
 
-    # start serving only for the bounded lifetime of the test context.
+    # WO-1963@v11: start serving only for the bounded lifetime of the test context.
     def __enter__(self) -> RunningServer:
         self.thread.start()
         return self
 
-    # synchronously stop the server so no request escapes the assertion window.
+    # WO-1963@v11: synchronously stop the server so no request escapes the assertion window.
     def __exit__(self, *_: object) -> None:
         self.server.shutdown()
         self.server.server_close()
         self.thread.join(timeout=2)
 
 
-# use inert credentials while exercising the same request construction.
+# WO-1963@v11: use inert credentials while exercising the same request construction.
 def test_config(base_url: str = "https://127.0.0.1") -> Any:
     return quickstart.Config(
         base_url=base_url,
@@ -105,9 +105,9 @@ def test_config(base_url: str = "https://127.0.0.1") -> Any:
     )
 
 
-# reject credential and origin hazards before urllib constructs a request.
+# WO-1963@v11: reject credential and origin hazards before urllib constructs a request.
 class ConfigurationSafetyTests(unittest.TestCase):
-    # explicit empty proxy policy prevents environment-driven credential routing.
+    # WO-1963@v11: explicit empty proxy policy prevents environment-driven credential routing.
     def test_opener_ignores_inherited_proxy_configuration(self) -> None:
         with patch(
             "urllib.request.getproxies",
@@ -122,7 +122,7 @@ class ConfigurationSafetyTests(unittest.TestCase):
         ]
         self.assertEqual(proxy_handlers, [])
 
-    # malformed or non-TLS remote origins cannot reach the opener.
+    # WO-1963@v11: malformed or non-TLS remote origins cannot reach the opener.
     def test_remote_plaintext_and_non_origin_base_urls_fail_before_request(self) -> None:
         invalid_urls = (
             "http://workledger.example",
@@ -146,7 +146,7 @@ class ConfigurationSafetyTests(unittest.TestCase):
                         )
                 opener.assert_not_called()
 
-    # an explicit zero port is never an absent default-port authority.
+    # WO-1963@v11: an explicit zero port is never an absent default-port authority.
     def test_explicit_zero_port_fails_before_resolution_or_dispatch(self) -> None:
         for base_url in ("http://127.0.0.1:0", "https://workledger.example:0"):
             with self.subTest(base_url=base_url):
@@ -173,7 +173,7 @@ class ConfigurationSafetyTests(unittest.TestCase):
                 self.assertNotIn(config.agent_token, diagnostic)
                 self.assertNotIn(config.reviewer_token, diagnostic)
 
-    # retain explicit local-development HTTP without weakening remote TLS.
+    # WO-1963@v11: retain explicit local-development HTTP without weakening remote TLS.
     def test_plaintext_loopback_and_https_origins_are_allowed(self) -> None:
         origins = {
             "http://localhost:8080": "http://localhost:8080",
@@ -186,7 +186,7 @@ class ConfigurationSafetyTests(unittest.TestCase):
             with self.subTest(base_url=base_url):
                 self.assertEqual(quickstart.validate_base_url(base_url), expected)
 
-    # invalid header bytes fail locally and never enter diagnostics.
+    # WO-1963@v11: invalid header bytes fail locally and never enter diagnostics.
     def test_invalid_bearer_token_fails_before_request_without_echo(self) -> None:
         unsafe_token = "agent-token\r\ncredential-tail"
         config = quickstart.Config(
@@ -213,9 +213,9 @@ class ConfigurationSafetyTests(unittest.TestCase):
         self.assertNotIn("credential-tail", diagnostic)
 
 
-# loopback peers prove headers and both body classes share one deadline.
+# WO-1963@v11: loopback peers prove headers and both body classes share one deadline.
 class RequestDeadlineTests(unittest.TestCase):
-    # malformed resolver rows fail closed before urllib can dispatch.
+    # WO-1963@v11: malformed resolver rows fail closed before urllib can dispatch.
     def test_resolver_rejects_unadmitted_rows_before_dispatch(self) -> None:
         invalid_rows = (
             [
@@ -265,7 +265,7 @@ class RequestDeadlineTests(unittest.TestCase):
                 )
         opener.assert_not_called()
 
-    # resolver children inherit no credentials on either supported OS family.
+    # WO-1963@v11: resolver children inherit no credentials on either supported OS family.
     def test_resolver_environment_is_a_platform_minimum_allowlist(self) -> None:
         with (
             patch.object(quickstart.os, "name", "posix"),
@@ -300,7 +300,7 @@ class RequestDeadlineTests(unittest.TestCase):
             with self.assertRaises(OSError):
                 quickstart.resolver_environment()
 
-    # resolution reserves a decreasing bounded budget for kill and reap.
+    # WO-1963@v11: resolution reserves a decreasing bounded budget for kill and reap.
     def test_resolver_timeout_reserves_bounded_reap_budget(self) -> None:
         process = MagicMock()
         process.communicate.side_effect = [
@@ -319,7 +319,7 @@ class RequestDeadlineTests(unittest.TestCase):
         self.assertAlmostEqual(timeouts[1], 0.2)
         process.kill.assert_called_once_with()
 
-    # late timeout delivery cannot strand the already-killed resolver child.
+    # WO-1963@v11: late timeout delivery cannot strand the already-killed resolver child.
     def test_late_resolver_timeout_assigns_daemon_reaper(self) -> None:
         reaped = threading.Event()
         process = MagicMock()
@@ -347,7 +347,7 @@ class RequestDeadlineTests(unittest.TestCase):
         self.assertEqual(process.communicate.call_args_list[1].kwargs, {})
         opener.assert_not_called()
 
-    # a resolver child must be killed and reaped before urllib dispatches.
+    # WO-1963@v11: a resolver child must be killed and reaped before urllib dispatches.
     def test_slow_resolution_is_killed_before_dispatch(self) -> None:
         slow_resolver = "import time; time.sleep(5)"
         started = time.monotonic()
@@ -370,7 +370,7 @@ class RequestDeadlineTests(unittest.TestCase):
         self.assertLess(time.monotonic() - started, RESOLVER_TEST_TIMEOUT_SECONDS)
         opener.assert_not_called()
 
-    # sequential address attempts consume one monotonic remainder.
+    # WO-1963@v11: sequential address attempts consume one monotonic remainder.
     def test_resolved_addresses_share_one_decreasing_budget(self) -> None:
         first = MagicMock()
         first.connect.side_effect = OSError("first address refused")
@@ -410,7 +410,7 @@ class RequestDeadlineTests(unittest.TestCase):
         self.assertAlmostEqual(second.settimeout.call_args.args[0], 0.6)
         first.close.assert_called_once_with()
 
-    # TLS starts with the budget left after resolution and TCP connection.
+    # WO-1963@v11: TLS starts with the budget left after resolution and TCP connection.
     def test_tls_handshake_receives_only_connection_remainder(self) -> None:
         raw_socket = MagicMock()
         tls_socket = MagicMock()
@@ -591,9 +591,9 @@ class RequestDeadlineTests(unittest.TestCase):
         self.assertNotIn(secret, str(raised.exception))
 
 
-# emulate the exact durable lifecycle needed to prove replay behavior.
+# WO-1963@v11: emulate the exact durable lifecycle needed to prove replay behavior.
 class LifecycleAPI:
-    # retain mutation counts so a terminal replay cannot hide side effects.
+    # WO-1963@v11: retain mutation counts so a terminal replay cannot hide side effects.
     def __init__(self) -> None:
         self.wo: dict[str, Any] | None = None
         self.note: dict[str, Any] | None = None
@@ -605,7 +605,7 @@ class LifecycleAPI:
         self.get_calls = 0
         self.history: list[dict[str, Any]] = []
 
-    # return copies so client-side mutation cannot alter fake server authority.
+    # WO-1963@v11: return copies so client-side mutation cannot alter fake server authority.
     def current_wo(self) -> dict[str, Any]:
         if self.wo is None:
             raise AssertionError("lifecycle WO has not been created")
@@ -614,7 +614,7 @@ class LifecycleAPI:
             current["sections"] = dict(current["sections"])
         return current
 
-    # reject role, status, and CAS drift instead of normalizing bad requests.
+    # WO-1963@v11: reject role, status, and CAS drift instead of normalizing bad requests.
     @staticmethod
     def require_request(
         token: str,
@@ -628,7 +628,7 @@ class LifecycleAPI:
         if expected_statuses != wanted_statuses:
             raise AssertionError(f"{context} used the wrong expected statuses")
 
-    # every fake mutation consumes the exact current revision/hash pair.
+    # WO-1963@v11: every fake mutation consumes the exact current revision/hash pair.
     def require_authority(self, body: dict[str, Any], context: str) -> None:
         current = self.current_wo()
         if body.get("expected_rev") != current["rev"]:
@@ -636,7 +636,7 @@ class LifecycleAPI:
         if body.get("expected_content_hash") != current["content_hash"]:
             raise AssertionError(f"{context} omitted or changed expected_content_hash")
 
-    # accept only the routes and state changes required by the lifecycle contract.
+    # WO-1963@v11: accept only the routes and state changes required by the lifecycle contract.
     def __call__(
         self,
         config: Any,
@@ -824,9 +824,9 @@ class LifecycleAPI:
         raise AssertionError(f"unexpected request {method} {path} body={body!r}")
 
 
-# the redirect target must remain completely untouched, not merely unauthenticated.
+# WO-1963@v11: the redirect target must remain completely untouched, not merely unauthenticated.
 class RedirectSafetyTests(unittest.TestCase):
-    # every refused status releases its source response before control returns.
+    # WO-1963@v11: every refused status releases its source response before control returns.
     def test_redirect_refusal_closes_source_response_for_reads_and_writes(self) -> None:
         secret = "redirect-close-secret"
         handler = quickstart.RefuseRedirectHandler()
@@ -850,7 +850,7 @@ class RedirectSafetyTests(unittest.TestCase):
                     response.close.assert_called_once_with()
                     self.assertNotIn(secret, str(raised.exception))
 
-    # malformed Location is refused before urllib parses or follows it.
+    # WO-1963@v11: malformed Location is refused before urllib parses or follows it.
     def test_malformed_location_enters_keyed_replay(self) -> None:
         request_bodies: list[bytes] = []
 
@@ -890,31 +890,31 @@ class RedirectSafetyTests(unittest.TestCase):
         self.assertEqual(len(request_bodies), 2)
         self.assertEqual(request_bodies[0], request_bodies[1])
 
-    # prove cross-origin redirect refusal with independent origin and target servers.
+    # WO-1963@v11: prove cross-origin redirect refusal with independent origin and target servers.
     def test_cross_origin_redirect_sends_no_request_or_authorization(self) -> None:
         target_requests: list[tuple[str, str | None]] = []
 
         class TargetHandler(BaseHTTPRequestHandler):
-            # any invocation records the credential-forwarding safety violation.
+            # WO-1963@v11: any invocation records the credential-forwarding safety violation.
             def do_GET(self) -> None:
                 target_requests.append((self.path, self.headers.get("Authorization")))
                 self.send_response(200)
                 self.end_headers()
 
-            # keep deterministic test output free of request logging.
+            # WO-1963@v11: keep deterministic test output free of request logging.
             def log_message(self, *_: object) -> None:
                 return
 
         with RunningServer(TargetHandler) as target:
 
             class OriginHandler(BaseHTTPRequestHandler):
-                # redirect toward a separately bound origin under test control.
+                # WO-1963@v11: redirect toward a separately bound origin under test control.
                 def do_GET(self) -> None:
                     self.send_response(302)
                     self.send_header("Location", target.url + "/credential-sink")
                     self.end_headers()
 
-                # keep deterministic test output free of request logging.
+                # WO-1963@v11: keep deterministic test output free of request logging.
                 def log_message(self, *_: object) -> None:
                     return
 
@@ -931,7 +931,7 @@ class RedirectSafetyTests(unittest.TestCase):
         self.assertEqual(target_requests, [])
         self.assertNotIn(secret, str(raised.exception))
 
-    # a refused mutation redirect receives one exact keyed replay at the origin.
+    # WO-1963@v11: a refused mutation redirect receives one exact keyed replay at the origin.
     def test_mutation_redirect_enters_keyed_replay_without_touching_target(self) -> None:
         target_requests: list[str] = []
         origin_bodies: list[bytes] = []
@@ -1001,7 +1001,7 @@ class RedirectSafetyTests(unittest.TestCase):
         self.assertEqual(origin_bodies[0], origin_bodies[1])
         self.assertEqual(target_requests, [])
 
-    # a refused non-keyed redirect reconciles through one authoritative GET.
+    # WO-1963@v11: a refused non-keyed redirect reconciles through one authoritative GET.
     def test_claim_redirect_enters_readback_without_touching_target(self) -> None:
         target_requests: list[str] = []
         origin_methods: list[str] = []
@@ -1061,9 +1061,9 @@ class RedirectSafetyTests(unittest.TestCase):
         self.assertEqual(target_requests, [])
 
 
-# keyed writes replay only exact canonical acknowledgements and bodies.
+# WO-1963@v11: keyed writes replay only exact canonical acknowledgements and bodies.
 class KeyedRetryTests(unittest.TestCase):
-    # an invalid note acknowledgement receives exactly one identical replay.
+    # WO-1963@v11: an invalid note acknowledgement receives exactly one identical replay.
     def test_note_invalid_ack_replays_once_with_identical_body(self) -> None:
         note = {
             "id": 9,
@@ -1088,7 +1088,7 @@ class KeyedRetryTests(unittest.TestCase):
         self.assertEqual(second.args[2], first.args[2])
         self.assertEqual(second.kwargs["body"], first.kwargs["body"])
 
-    # transport and server failures preserve byte-identical create bodies.
+    # WO-1963@v11: transport and server failures preserve byte-identical create bodies.
     def test_keyed_create_replays_once_with_byte_identical_body(self) -> None:
         config = test_config()
         body = {
@@ -1147,7 +1147,7 @@ class KeyedRetryTests(unittest.TestCase):
                 second_request = opener.call_args_list[1].args[0]
                 self.assertEqual(first_request.data, second_request.data)
 
-    # parser recursion limits remain one bounded keyed ambiguity.
+    # WO-1963@v11: parser recursion limits remain one bounded keyed ambiguity.
     def test_deep_json_ack_replays_once_without_credential_diagnostic(self) -> None:
         config = test_config()
         json_depth = sys.getrecursionlimit() * 2
@@ -1159,7 +1159,7 @@ class KeyedRetryTests(unittest.TestCase):
         first_payload = nested_payload(config.agent_token)
         second_payload = nested_payload(config.reviewer_token)
         self.assertLess(len(first_payload), quickstart.MAX_SUCCESS_BODY_BYTES)
-        # deep payloads fail the same way whichever parser CPython ships
+        # WO-1963@v11: deep payloads fail the same way whichever parser CPython ships
         try:
             json.loads(first_payload)
         except RecursionError:
@@ -1202,7 +1202,7 @@ class KeyedRetryTests(unittest.TestCase):
         self.assertNotIn(config.reviewer_token, diagnostic)
         self.assertNotIn("Bearer", diagnostic)
 
-    # truncated successful responses remain bounded mutation ambiguities.
+    # WO-1963@v11: truncated successful responses remain bounded mutation ambiguities.
     def test_incomplete_success_response_enters_keyed_replay(self) -> None:
         config = test_config()
         incomplete = MagicMock()
@@ -1232,7 +1232,7 @@ class KeyedRetryTests(unittest.TestCase):
         self.assertEqual(result, {"accepted": True})
         self.assertEqual(opener.call_count, 2)
 
-    # malformed HTTP framing cannot escape the mutation state machine.
+    # WO-1963@v11: malformed HTTP framing cannot escape the mutation state machine.
     def test_bad_status_line_enters_keyed_replay_without_echo(self) -> None:
         config = test_config()
         first = BadStatusLine(f"Bearer {config.reviewer_token}")
@@ -1260,7 +1260,7 @@ class KeyedRetryTests(unittest.TestCase):
         self.assertNotIn(config.reviewer_token, diagnostic)
         self.assertNotIn("Bearer", diagnostic)
 
-    # a truncated HTTP error body cannot bypass bounded replay.
+    # WO-1963@v11: a truncated HTTP error body cannot bypass bounded replay.
     def test_http_error_body_read_failure_enters_keyed_replay(self) -> None:
         config = test_config()
         error_body = MagicMock()
@@ -1295,7 +1295,7 @@ class KeyedRetryTests(unittest.TestCase):
         self.assertEqual(result, {"accepted": True})
         self.assertEqual(opener.call_count, 2)
 
-    # malformed mutation redirects remain uncertain even without Location handling.
+    # WO-1963@v11: malformed mutation redirects remain uncertain even without Location handling.
     def test_http_redirect_error_enters_keyed_replay(self) -> None:
         config = test_config()
         redirect = HTTPError(
@@ -1328,7 +1328,7 @@ class KeyedRetryTests(unittest.TestCase):
         self.assertEqual(result, {"accepted": True})
         self.assertEqual(opener.call_count, 2)
 
-    # create authority cannot cross project or keyed-request identity.
+    # WO-1963@v11: create authority cannot cross project or keyed-request identity.
     def test_create_ack_rejects_wrong_project_or_title(self) -> None:
         base = {
             "id": 42,
@@ -1352,7 +1352,7 @@ class KeyedRetryTests(unittest.TestCase):
                         "expected title",
                     )
 
-    # keyed note authority includes canonical shape, content, and project.
+    # WO-1963@v11: keyed note authority includes canonical shape, content, and project.
     def test_note_ack_rejects_noncanonical_or_wrong_identity(self) -> None:
         base = {
             "id": 9,
@@ -1381,7 +1381,7 @@ class KeyedRetryTests(unittest.TestCase):
                         "note-key",
                     )
 
-    # a mutation 5xx is uncertain and its server body cannot leak credentials.
+    # WO-1963@v11: a mutation 5xx is uncertain and its server body cannot leak credentials.
     def test_mutation_5xx_is_ambiguous_without_secret_diagnostics(self) -> None:
         secret = "server-error-secret-token"
         error = HTTPError(
@@ -1406,20 +1406,20 @@ class KeyedRetryTests(unittest.TestCase):
         self.assertNotIn(secret, diagnostic)
         self.assertNotIn("Authorization", diagnostic)
 
-    # a non-object 2xx body cannot serve as mutation authority.
+    # WO-1963@v11: a non-object 2xx body cannot serve as mutation authority.
     def test_invalid_success_ack_is_ambiguous(self) -> None:
         class InvalidResponse:
             status = 201
 
-            # supply a malformed body through the bounded-read interface.
+            # WO-1963@v11: supply a malformed body through the bounded-read interface.
             def read(self, _: int) -> bytes:
                 return b"not-json"
 
-            # emulate urllib's bounded response context.
+            # WO-1963@v11: emulate urllib's bounded response context.
             def __enter__(self) -> InvalidResponse:
                 return self
 
-            # the inert response has no cleanup side effects.
+            # WO-1963@v11: the inert response has no cleanup side effects.
             def __exit__(self, *_: object) -> None:
                 return
 
@@ -1435,9 +1435,9 @@ class KeyedRetryTests(unittest.TestCase):
                 )
 
 
-# preflight every deterministic prerequisite before the first mutation.
+# WO-1963@v11: preflight every deterministic prerequisite before the first mutation.
 class PreflightAndKeyTests(unittest.TestCase):
-    # create retry identity uses the same bounded deterministic contract.
+    # WO-1963@v11: create retry identity uses the same bounded deterministic contract.
     def test_create_key_derivation_is_safe_bounded_and_deterministic(self) -> None:
         safe = quickstart.derive_create_key("quickstart-project", "repeatable-run")
         self.assertEqual(safe, "quickstart-project:repeatable-run:create")
@@ -1459,7 +1459,7 @@ class PreflightAndKeyTests(unittest.TestCase):
                 self.assertTrue(all(0x21 <= byte <= 0x7E for byte in first.encode()))
                 quickstart.validate_create_idempotency_key(first)
 
-    # unsafe caller text maps to one stable visible-ASCII bounded note key.
+    # WO-1963@v11: unsafe caller text maps to one stable visible-ASCII bounded note key.
     def test_note_key_derivation_is_safe_bounded_and_deterministic(self) -> None:
         safe = quickstart.derive_note_key("quickstart-project", "repeatable-run")
         self.assertEqual(safe, "quickstart-project:repeatable-run:note")
@@ -1481,7 +1481,7 @@ class PreflightAndKeyTests(unittest.TestCase):
                 self.assertTrue(all(0x21 <= byte <= 0x7E for byte in first.encode()))
                 quickstart.validate_note_idempotency_key(first)
 
-    # an old-server discovery response stops before create or any mutation.
+    # WO-1963@v11: an old-server discovery response stops before create or any mutation.
     def test_missing_idempotent_note_route_fails_before_create(self) -> None:
         config = test_config()
         with patch.object(
@@ -1499,7 +1499,7 @@ class PreflightAndKeyTests(unittest.TestCase):
             config.agent_token,
         )
 
-    # local note-key validation precedes even the read-only server preflight.
+    # WO-1963@v11: local note-key validation precedes even the read-only server preflight.
     def test_invalid_derived_note_key_stops_before_network(self) -> None:
         with (
             patch.object(quickstart, "derive_note_key", return_value="unsafe key"),
@@ -1510,7 +1510,7 @@ class PreflightAndKeyTests(unittest.TestCase):
 
         request.assert_not_called()
 
-    # create-key validation also precedes the read-only server preflight.
+    # WO-1963@v11: create-key validation also precedes the read-only server preflight.
     def test_invalid_derived_create_key_stops_before_network(self) -> None:
         with (
             patch.object(quickstart, "derive_create_key", return_value="unsafe key"),
@@ -1522,9 +1522,9 @@ class PreflightAndKeyTests(unittest.TestCase):
         request.assert_not_called()
 
 
-# terminal replay is an evidence read, never a second lifecycle mutation.
+# WO-1963@v11: terminal replay is an evidence read, never a second lifecycle mutation.
 class LifecycleRecoveryTests(unittest.TestCase):
-    # the second invocation may read but cannot mutate an already-done WO.
+    # WO-1963@v11: the second invocation may read but cannot mutate an already-done WO.
     def test_second_done_run_performs_no_claim_patch_or_note(self) -> None:
         api = LifecycleAPI()
         with patch.object(quickstart, "request_json", side_effect=api):
@@ -1543,7 +1543,7 @@ class LifecycleRecoveryTests(unittest.TestCase):
         self.assertEqual(api.preflight_calls, 2)
         self.assertEqual(api.create_calls, 2)
 
-    # invalid claim authority triggers one GET and no second POST.
+    # WO-1963@v11: invalid claim authority triggers one GET and no second POST.
     def test_non_keyed_invalid_ack_reconciles_without_write_retry(self) -> None:
         config = test_config()
         base = {
@@ -1568,7 +1568,7 @@ class LifecycleRecoveryTests(unittest.TestCase):
         self.assertEqual(result, reconciled)
         self.assertEqual([call.args[1] for call in request.call_args_list], ["POST", "GET"])
 
-    # integer parser limits route a non-keyed write to one authority readback.
+    # WO-1963@v11: integer parser limits route a non-keyed write to one authority readback.
     def test_pathological_json_ack_gets_one_authoritative_readback(self) -> None:
         config = test_config()
         base = {
@@ -1617,7 +1617,7 @@ class LifecycleRecoveryTests(unittest.TestCase):
         methods = [call.args[0].get_method() for call in opener.call_args_list]
         self.assertEqual(methods, ["POST", "GET"])
 
-    # an expired or malformed reconciled lease cannot authorize mutation.
+    # WO-1963@v11: an expired or malformed reconciled lease cannot authorize mutation.
     def test_claim_reconciliation_rejects_non_active_lease(self) -> None:
         config = test_config()
         base = {
@@ -1652,7 +1652,7 @@ class LifecycleRecoveryTests(unittest.TestCase):
                     ["POST", "GET"],
                 )
 
-    # invalid PATCH authority triggers one GET and no second PATCH.
+    # WO-1963@v11: invalid PATCH authority triggers one GET and no second PATCH.
     def test_patch_invalid_ack_reconciles_without_write_retry(self) -> None:
         config = test_config()
         base = {
@@ -1685,7 +1685,7 @@ class LifecycleRecoveryTests(unittest.TestCase):
         self.assertEqual(result, reconciled)
         self.assertEqual([call.args[1] for call in request.call_args_list], ["PATCH", "GET"])
 
-    # status alone cannot prove that this no-code closure landed.
+    # WO-1963@v11: status alone cannot prove that this no-code closure landed.
     def test_patch_reconciliation_rejects_wrong_terminal_reason(self) -> None:
         config = test_config()
         base = {
@@ -1718,7 +1718,7 @@ class LifecycleRecoveryTests(unittest.TestCase):
 
         self.assertEqual([call.args[1] for call in request.call_args_list], ["PATCH", "GET"])
 
-    # binding proof must match the canonical note returned by the list read.
+    # WO-1963@v11: binding proof must match the canonical note returned by the list read.
     def test_completion_binding_rejects_note_version_drift(self) -> None:
         config = test_config()
         note_key = quickstart.derive_note_key(config.project, config.run_id)
@@ -1756,7 +1756,7 @@ class LifecycleRecoveryTests(unittest.TestCase):
                     {"wo": done, "created": False, "deduplicated": True},
                 )
 
-    # the fake rejects self-close, missing CAS, and missing closure evidence.
+    # WO-1963@v11: the fake rejects self-close, missing CAS, and missing closure evidence.
     def test_lifecycle_fake_enforces_mutation_contract(self) -> None:
         config = test_config()
         api = LifecycleAPI()
@@ -1801,9 +1801,9 @@ class LifecycleRecoveryTests(unittest.TestCase):
                     api(config, "PATCH", base, token, body=body)
 
 
-# public diagnostics and process streams must never repeat bearer material.
+# WO-1963@v11: public diagnostics and process streams must never repeat bearer material.
 class DiagnosticSafetyTests(unittest.TestCase):
-    # redact complete overlapping credentials before shorter substrings.
+    # WO-1963@v11: redact complete overlapping credentials before shorter substrings.
     def test_overlapping_credentials_are_redacted_longest_first(self) -> None:
         config = quickstart.Config(
             base_url="https://workledger.invalid",
@@ -1818,7 +1818,7 @@ class DiagnosticSafetyTests(unittest.TestCase):
 
         self.assertEqual(diagnostic, "<redacted>")
 
-    # successful response fields cannot become credential-bearing diagnostics.
+    # WO-1963@v11: successful response fields cannot become credential-bearing diagnostics.
     def test_successful_response_status_is_not_echoed_in_errors(self) -> None:
         config = test_config()
         unsafe_status = f"pending-{config.agent_token}-{config.reviewer_token}"
@@ -1839,7 +1839,7 @@ class DiagnosticSafetyTests(unittest.TestCase):
         self.assertNotIn(config.agent_token, diagnostic)
         self.assertNotIn(config.reviewer_token, diagnostic)
 
-    # an error under either credential must redact both configured tokens.
+    # WO-1963@v11: an error under either credential must redact both configured tokens.
     def test_http_failure_redacts_the_other_configured_token(self) -> None:
         config = test_config()
         error = HTTPError(
@@ -1868,7 +1868,7 @@ class DiagnosticSafetyTests(unittest.TestCase):
         self.assertNotIn(config.reviewer_token, diagnostic)
         self.assertNotIn("Authorization", diagnostic)
 
-    # sanitize both server-controlled fields before main writes stderr.
+    # WO-1963@v11: sanitize both server-controlled fields before main writes stderr.
     def test_http_failure_does_not_emit_tokens_or_headers(self) -> None:
         config = test_config()
         error = HTTPError(
