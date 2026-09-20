@@ -2,6 +2,26 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.55.26] - 2026-09-21
+
+### Fixed
+- `workledger --version` reported an unknown flag instead of printing the
+  version. It now prints the same line as `workledger version` and exits
+  successfully, without contacting a licence server or a backend first.
+- On an installation without a licence, `workledger status` listed local
+  changes as permitted while every command refused them. The reported
+  capabilities are now taken from the same check the commands apply, so what
+  the status says and what the tool allows agree, and the reason is stated.
+- Duplicate-work warnings shown when you create a work order now consider every
+  project you can see, and include work that was previously cancelled, with the
+  reason it was cancelled. Nothing is matched that you do not have access to,
+  and the number of results is unchanged.
+- Writes to stored notes and context now carry the same revision check on every
+  supported database, so a write made against an out-of-date copy is refused
+  rather than silently overwriting a newer one.
+- Published examples and workflows now carry their work-order references, so
+  every change in the distribution points back to its record.
+
 ## [0.55.25] - 2026-09-16
 
 ### Fixed
