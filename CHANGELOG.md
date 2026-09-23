@@ -2,6 +2,29 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.56.0] - 2026-09-24
+
+### Added
+- A work order can name files to read for context without granting permission to
+  write them. Execution contracts include those paths in the read scope while the
+  write scope is unchanged, and work orders that do not use the field behave
+  exactly as before (WO-2174).
+- `workledger create` accepts repeatable `--read-file` paths for that read-only
+  context (WO-2248).
+- A work order awaiting verification whose executor was recorded incorrectly can
+  now be corrected with an audited note. The correction carries the identity of
+  the key that made it, and the original record stays visible (WO-2253).
+
+### Fixed
+- A work order can no longer be sent for verification under the same identity
+  that will verify it. Such a request is refused with an explanation of how to
+  name the executor that did the work, and the command line tells you which
+  identity it would record before it writes (WO-2252).
+- The pre-push check no longer asks you to move a work order into a state the
+  system does not allow. Work that has been verified but not yet merged now
+  passes, and every refusal names only transitions that are actually possible
+  (WO-1906).
+
 ## [0.55.26] - 2026-09-21
 
 ### Fixed
