@@ -5,25 +5,30 @@ Customer-facing release notes for Hiveram. Downloads for each version are on the
 ## [0.56.0] - 2026-09-24
 
 ### Added
-- A work order can name files to read for context without granting permission to
-  write them. Execution contracts include those paths in the read scope while the
-  write scope is unchanged, and work orders that do not use the field behave
-  exactly as before (WO-2174).
-- `workledger create` accepts repeatable `--read-file` paths for that read-only
-  context (WO-2248).
-- A work order awaiting verification whose executor was recorded incorrectly can
-  now be corrected with an audited note. The correction carries the identity of
-  the key that made it, and the original record stays visible (WO-2253).
+- A work order can now list files that should be read for background without
+  allowing them to be changed. Previously the only way to give an agent the
+  context it needed was to add those files to the list it was allowed to edit,
+  which granted more permission than the work actually required. Files named for
+  reading stay read-only, what may be changed is exactly what it was before, and
+  a work order that does not use this behaves as it always has. (WO-2174)
+- When you create a work order you can point at those background files directly,
+  repeating the option once per file. (WO-2248)
+- If the wrong person or agent was recorded as having done the work on a record
+  awaiting review, that can now be corrected. The correction is added as a note,
+  carries the identity of whoever made it, and leaves the original entry visible,
+  so the record shows both what was first written and what corrected it. (WO-2253)
 
 ### Fixed
-- A work order can no longer be sent for verification under the same identity
-  that will verify it. Such a request is refused with an explanation of how to
-  name the executor that did the work, and the command line tells you which
-  identity it would record before it writes (WO-2252).
-- The pre-push check no longer asks you to move a work order into a state the
-  system does not allow. Work that has been verified but not yet merged now
-  passes, and every refusal names only transitions that are actually possible
-  (WO-1906).
+- Work could be handed to review under the same identity that would then approve
+  it, which meant the same party effectively signed off on its own work. That is
+  now refused, with an explanation of how to name whoever actually did the work.
+  The command also tells you which identity it is about to record before it
+  writes anything, so the ordinary case is a reminder rather than a refusal.
+  (WO-2252)
+- The check that runs before you publish could ask you to move a work order into
+  a state the system does not permit, leaving no way forward except to bypass the
+  check entirely. Work that has been reviewed but not yet merged now passes, and
+  every refusal names only states you can actually move to. (WO-1906)
 
 ## [0.55.26] - 2026-09-21
 
