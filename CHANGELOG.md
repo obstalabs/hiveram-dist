@@ -2,6 +2,17 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.56.1] - 2026-09-24
+
+### Fixed
+- A reference to a work order in another project is now matched by that project's
+  exact identity. Previously a reference could be satisfied by a work order with
+  the same number in a different project, so a warning about a missing reference
+  could be hidden when it should have been shown. References without a project
+  still belong to the work order's own project, and a reference naming a project
+  that cannot be found is now reported rather than quietly treated as local
+  (WO-2029).
+
 ## [0.56.0] - 2026-09-24
 
 ### Added
