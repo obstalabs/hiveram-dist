@@ -2,6 +2,16 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.56.2] - 2026-09-25
+
+### Fixed
+- When you update a work order, the response now reflects the relationships
+  stored on it. A warning about a missing reference clears in that same
+  response rather than waiting for the next read (WO-2032).
+- Quality checks now account only for the relationships your key is allowed to
+  see, so a hidden relationship cannot silently satisfy a requirement on your
+  behalf (WO-2031).
+
 ## [0.56.1] - 2026-09-24
 
 ### Fixed
