@@ -2,6 +2,17 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.56.3] - 2026-09-26
+
+### Fixed
+- Closing a work order while acknowledging its outstanding follow-ups is now
+  accepted, instead of being refused until you overrode the check (WO-2299).
+- Structured closure evidence you supply is now checked as intended, so a commit
+  reference that was never linked is caught at close time rather than passing
+  unexamined (WO-2300).
+- A work order naming a file that no longer exists is refused when you dispatch
+  it, rather than failing later for whoever picks it up (WO-2274).
+
 ## [0.56.2] - 2026-09-25
 
 ### Fixed
