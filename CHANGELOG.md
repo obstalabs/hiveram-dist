@@ -2,6 +2,14 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.56.4] - 2026-09-27
+
+### Fixed
+- When you update a work order, the relationships in the response are limited to
+  the ones your key is allowed to see (WO-2034).
+- Closure verification now receives the complete proof, so a close is checked
+  against the canonical branch state as intended (WO-1670).
+
 ## [0.56.3] - 2026-09-26
 
 ### Fixed
