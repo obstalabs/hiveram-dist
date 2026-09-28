@@ -2,6 +2,18 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.57.0] - 2026-09-28
+
+### Added
+- `reaped --defects` lists cancelled work orders whose reason is missing or
+  unrecognized, so a swept record is distinguishable from a decided one (WO-2267).
+- Release status now shows whether work has been merged but not yet released, so a
+  merge is no longer mistaken for a shipped version (WO-2307).
+
+### Fixed
+- Updating a work order's dependencies now returns the updated record rather than
+  its state from before the update (WO-2036).
+
 ## [0.56.4] - 2026-09-27
 
 ### Fixed
