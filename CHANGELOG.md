@@ -2,6 +2,12 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.58.0] - 2026-09-30
+
+### Added
+- Writing to the database directly, rather than through the server, now prints
+  a notice, so these writes are visible before they are phased out (WO-2322).
+
 ## [0.57.0] - 2026-09-28
 
 ### Added
