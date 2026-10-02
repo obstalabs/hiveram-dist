@@ -2,6 +2,23 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.58.1] - 2026-10-02
+
+### Fixed
+- The local pre-push check now cancels the push whenever it cannot reach a
+  verdict, and names the reason: it ran out of time, it could not stop its own
+  work cleanly, the server was unreachable, or the check failed to start.
+  Previously a check that ran out of time allowed the push. To push anyway,
+  prefix that one push with `WORKLEDGER_SKIP_MERGE_GATE=1`; every use prints an
+  audit line (WO-2308).
+- With an API key configured, work orders claimed by one CLI command are no
+  longer refused by the next command run from the same shell; claims are now
+  recorded under your key's identity instead of a generic "cli" name (WO-2330).
+- Work orders awaiting final promotion are no longer closed automatically by
+  background reconciliation unless the caller is authorised to promote them;
+  instead they are listed with the reason, so every promotion is attributable
+  (WO-2323).
+
 ## [0.58.0] - 2026-09-30
 
 ### Added
