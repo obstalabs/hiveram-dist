@@ -2,6 +2,25 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.59.0] - 2026-10-17
+
+### Added
+- Budget spend events can now carry the token counts your provider reported
+  (provider, model, and input, output, cache and reasoning tokens) through the
+  CLI, API and MCP tools. A count that was not reported stays empty instead of
+  reading as zero, and totals are kept separate for each provider and model
+  (WO-2500).
+- `budget spend-events` reads one work order's spend over a time window, and can
+  summarise spend for work orders closed with green CI, grouped by complexity
+  tier (WO-2496).
+
+### Fixed
+- Budget lease and spend listings return an empty list instead of `null`, and the
+  MCP budget tools' results now pass client validation (WO-2496).
+- Repeated friction reports with the same fingerprint are added to the open work
+  order instead of creating duplicates, and keep a running occurrence count
+  (WO-2304).
+
 ## [0.58.1] - 2026-10-02
 
 ### Fixed
