@@ -2,6 +2,47 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.60.0] - 2026-10-23
+
+### Added
+- `workledger update` accepts `--found-in <project/WO-N>` to record where a
+  follow-up was found, using the same checks as `--depends-on` (WO-1330).
+
+### Changed
+- Budget spend can now be recorded by token counts alone when no trusted
+  price is available; dollar budgets are unaffected (WO-2522).
+- The release notes for 0.55.1 through 0.55.5 now state accurately that those
+  versions were not published as GitHub Releases and that the Helm chart first
+  became downloadable with 0.55.6 (WO-2010).
+
+### Fixed
+- Release archives now contain only the `workledger` binary and the public
+  distribution's README, CHANGELOG and LICENSE (WO-2579).
+- The inactivity sweep no longer cancels work that is claimed, priority P0 or
+  P1, ready for dispatch, waiting for verification or landing, waiting on an
+  operator decision, or depended on by active work. A swept work order's
+  reason now lists what was checked (WO-2268, WO-1383).
+- `workledger recent` answers from a bounded server-side query instead of
+  reading every work order, so it works on large shared ledgers (WO-2180).
+- Releasing a work order that has no active claim succeeds and reports
+  `no_active_claim`, instead of re-checking closure and failing (WO-2461).
+- The MCP `workledger_add_note` tool accepts `claim_override` with a required
+  reason, matching what the claim refusal tells you to do (WO-2258).
+- Closure CI checks run `gh` from the repository checkout, and a failed lookup
+  now shows the first line of the `gh` error (WO-1670).
+- Edits to contract sections with variant names (for example `Acceptance`
+  or `scope_2026_10_19`) now advance the work order's intent revision
+  (WO-2553).
+- Fewer false credential warnings on work orders and friction reports that
+  quote code, while real secrets are still refused (WO-1672).
+- Closure refusals name a forbidden attribution trailer as such, and give an
+  override path for commits already on the main branch (WO-2558).
+- CLI errors print once without the usage text (WO-2512); a failed audit note
+  after a successful MCP update is reported as a warning (WO-1292); a parent
+  stays open when its own acceptance goes beyond its children (WO-959);
+  decomposition validates everything before writing (WO-2463); reopened
+  verifications state their reason (WO-2259).
+
 ## [0.59.0] - 2026-10-17
 
 ### Added
@@ -314,24 +355,24 @@ Customer-facing release notes for Hiveram. Downloads for each version are on the
 ## [0.55.5] - 2026-08-31
 
 ### Added
-- The Workledger Helm chart is published as a release asset. Deploy on Kubernetes against your own PostgreSQL, with a values schema, per-value documentation, an optional migration hook, and restricted Pod Security defaults.
+- The Workledger Helm chart was prepared as a release asset; it first became downloadable with 0.55.6. Deploy on Kubernetes against your own PostgreSQL, with a values schema, per-value documentation, an optional migration hook, and restricted Pod Security defaults.
 
 ### Changed
 - The container image is now published alongside the rest of the distribution, so it can be pulled from the same place you download everything else.
 
 ### Note
-- This release supersedes 0.55.0 through 0.55.4, which were tagged but never published. Install 0.55.5.
+- 0.55.0 through 0.55.5 were tagged but not published as GitHub Releases. Install 0.55.6 or later.
 
 ## [0.55.4] - 2026-08-31
 
 ### Added
-- The Workledger Helm chart is now published as a release asset. Deploy on Kubernetes against your own PostgreSQL, with a values schema, per-value documentation, an optional migration hook, and restricted Pod Security defaults.
+- The Workledger Helm chart was prepared as a release asset; it first became downloadable with 0.55.6. Deploy on Kubernetes against your own PostgreSQL, with a values schema, per-value documentation, an optional migration hook, and restricted Pod Security defaults.
 
 ### Fixed
-- The container image no longer refuses a valid license after a key rotation. Both published architectures accept a valid license and are verified on their own hardware before release. Expired licenses are still refused.
+- The container image no longer refuses a valid license after a key rotation, and expired licenses are still refused. The fix was proven on native amd64 and arm64 build hardware; the released arm64 image of this tag was not runtime-proven with its release verifier.
 
 ### Note
-- This release supersedes 0.55.0 through 0.55.3, which were tagged but never published. Install 0.55.4.
+- 0.55.0 through 0.55.4 were tagged but not published as GitHub Releases. Install 0.55.6 or later.
 
 ## [0.55.3] - 2026-08-30
 
@@ -344,7 +385,7 @@ Customer-facing release notes for Hiveram. Downloads for each version are on the
 ## [0.55.2] - 2026-08-30
 
 ### Added
-- The Workledger Helm chart is now published as a release asset. Deploy on Kubernetes against your own PostgreSQL, with a values schema, per-value documentation, an optional migration hook, and restricted Pod Security defaults.
+- The Workledger Helm chart was prepared as a release asset; it first became downloadable with 0.55.6. Deploy on Kubernetes against your own PostgreSQL, with a values schema, per-value documentation, an optional migration hook, and restricted Pod Security defaults.
 
 ### Note
 - The 0.55.0 and 0.55.1 tags had OCI image indexes but no GitHub Release or binary/chart assets. The 0.55.2 OCI image index also published, but its final GitHub Release and assets did not.
