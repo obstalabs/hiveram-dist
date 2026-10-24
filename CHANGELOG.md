@@ -2,6 +2,14 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.60.1] - 2026-10-24
+
+### Fixed
+- 0.60.0 was not published as a GitHub Release: its release archives were never
+  built. 0.60.1 is the first release that ships the 0.60.0 changes; install
+  0.60.1 or later. The 0.60.0 container image was published and contains the
+  same product changes (WO-2579).
+
 ## [0.60.0] - 2026-10-23
 
 ### Added
