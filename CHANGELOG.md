@@ -2,6 +2,32 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.61.0] - 2026-10-27
+
+### Added
+- `workledger reaped <project> --expiring` lists the work orders the inactivity
+  sweep will cancel in the next 7 days (`--days` to change), with each deadline,
+  so you can keep them before they are cancelled. `workledger doctor --project`
+  warns when that list is not empty (WO-2623).
+
+### Fixed
+- Windows: home directories, `~\` paths and key files saved with Windows line
+  endings now resolve the same way as on macOS and Linux, and `memory put`
+  shows an input hint instead of waiting when nothing is piped in (WO-2608).
+- Windows: capture promotion keeps input inside the allowed temporary
+  directories, as it already did on macOS and Linux (WO-2600).
+- When MCP registration is missing, `doctor` prints the exact command to
+  register the installed `workledger` with Claude Code, Codex or Qwen,
+  including paths with spaces (WO-2603).
+- `doctor` checks the connection saved in your configuration file and no
+  longer reports an unused local database as a failure (WO-2626).
+- With a hosted ledger, `plan`, `next`, `queue` and `reaped` showed only the
+  first 50 work orders. They now read every work order, or stop with a clear
+  error instead of a shortened list (WO-2621).
+- Windows: `scoop install workledger` stayed on 0.54.2 from 0.55.6 to 0.60.0. Scoop
+  now receives every release, and the release checks that Homebrew and Scoop both
+  show the new version (WO-2156).
+
 ## [0.60.1] - 2026-10-24
 
 ### Fixed
