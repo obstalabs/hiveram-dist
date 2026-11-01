@@ -2,6 +2,23 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.62.0] - 2026-11-01
+
+### Changed
+- **Breaking:** HTTP task export uses the configured repository and requires an authenticated reason to skip checkout checks. Export policies accept only `require_operator_review` and `deny_path:<relative glob>` with ASCII paths; free-text policies are refused. Control characters and invisible formatting in input fields are refused before they can add instructions to a task. (WO-2165)
+- **Breaking for MCP clients:** the event, bundle, solution-lattice and analysis-case list tools now return an object instead of a bare array: `{"events": [...]}`, `{"bundles": [...]}` (governance and release bundles), `{"lattices": [...]}`, `{"cases": [...]}`. Clients that read the old bare array must read the named field. (WO-2664)
+- **Breaking:** `workledger release` now releases only your own claim: pass the actor you claimed as with `--claim-actor`. Clearing someone else's claim requires `--claim-override` and a reason with `--claim-override-reason`. Clients older than this version have no `--claim-actor` on `release`: set `WORKLEDGER_ACTOR` to the name you claim with, so the claim and the release come from the same identity. (WO-2673)
+- **Breaking:** Status no longer contacts a default server when no HTTP endpoint is configured. Set `WORKLEDGER_URL`, `WORKLEDGER_HOST` or `connection.url`; the old `WORKLEDGER_HTTP_URL` setting is no longer read. (WO-2650)
+- Updating status or sections, or linking a commit, no longer reserves a work order for the caller. Explicit claims still protect work from other callers. (WO-2672)
+
+### Fixed
+- Exported tasks now contain the complete instructions, verification command and work order version, and can be saved as durable dispatch records. (WO-2165)
+- Saving or promoting artifacts and memory through MCP now honors the work order claim you hold, and refusals name the correct content type. Save and promotion refusals retain claim details and recovery guidance. (WO-2663)
+- Search recognizes existing positional projects while preserving unquoted queries, similarity search accepts query text, and both commands report an error for TSV requests instead of returning an unexpected format. (WO-2599)
+- On a fresh installation with no agent config, doctor shows the registration command or settings fragment and the file where it belongs. (WO-2603)
+- Doctor no longer warns about normal MCP permission prompts or complete approvals; explicit denials still name the affected tools in user and project settings. (WO-2643)
+- Creating a work order on a hosted ledger keeps its provenance links and honors the requested strict contract checks. (WO-2609)
+
 ## [0.61.0] - 2026-10-27
 
 ### Added
