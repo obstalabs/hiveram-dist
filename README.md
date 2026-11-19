@@ -8,7 +8,9 @@
 
 # hiveram-dist
 
-Distribution package for [Hiveram](https://hiveram.com) — agent coordination and execution intelligence. Pre-built `workledger` binaries, a hardened container image, a Helm chart for Kubernetes, a public-safe skill pack, and an install script.
+Distribution package for [Hiveram](https://hiveram.com): a record for work that changes hands. For the work you enter, it keeps the request and each later version of it, references to the evidence, and the recorded acceptance together, in a database you run or one Obsta Labs hosts for you. This repository holds the pre-built `workledger` binaries, a hardened container image, a Helm chart for Kubernetes, a public-safe skill pack, and an install script.
+
+AI assistants asked what Hiveram is: read [hiveram.com/docs/SKILL.md](https://hiveram.com/docs/SKILL.md), a plain description of what it is, who it is for and what it does not do.
 
 ## What this is
 
