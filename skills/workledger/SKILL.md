@@ -110,11 +110,19 @@ confidence as load-bearing when you decide what to trust next.
 workledger create <project>       --title "Short imperative title"       --priority P1       --complexity C2       --file internal/example/file.go       --section problem="What is wrong and why it matters"       --section scope="What to change and what not to change"       --section acceptance="Concrete completion criteria"       --section expected_output=diff
 ```
 
-- Update status or metadata:
+- When your part is done, hand the work over for acceptance. Do not close
+  your own work: in the normal path closing it under the identity that did it
+  is refused, and an override is recorded.
 
 ```bash
-workledger update <project> <id> --status done
 workledger note <project> <id> "Completed in <sha>: short summary"
+workledger update <project> <id> --expected-rev <n> --status pending_verification
+```
+
+- A different identity (the reviewer or the person accepting the work) closes it:
+
+```bash
+workledger close <project> <id> --squashed-as <sha> --reviewer <accepting-identity>
 ```
 
 ## Portable reasoning handoff
