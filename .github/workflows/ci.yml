@@ -150,7 +150,7 @@ jobs:
               assert_pinned_rejected(label, candidate, sample_digest)
 
           readme_bytes = Path("README.md").read_bytes()
-          expected_readme_sha256 = "f6abb40cb8cf8af9ecbe3698d0fd29e11d6b5d31d404000e5b739c6dbbc657cf"
+          expected_readme_sha256 = "6b437ca743ef070c30c5a19479e2b7c621ac0121546982102a4d1e2282a7a8ce"
           Path(sys.argv[1]).write_bytes(
               extract_pinned_manual_install(readme_bytes, expected_readme_sha256)
           )
