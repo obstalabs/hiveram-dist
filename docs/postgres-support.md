@@ -108,7 +108,7 @@ These are outside the support contract:
 
 ## Smoke kit
 
-Use the `scripts/pg_smoke.sh` smoke kit before calling a deployment supported. Obsta-managed evaluations can run this for you; self-hosted teams should run the current smoke kit that ships with their release binary or deployment package.
+Use the `scripts/pg_smoke.sh` smoke kit before calling a deployment supported. Obsta-managed evaluations can run this for you. The smoke kit is not in the release package yet; for a self-hosted deployment, Obsta Labs runs it against your DSN or API during the evaluation.
 
 ### Direct DSN mode
 
