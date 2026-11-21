@@ -21,16 +21,6 @@ Custody mode answers where the ledger lives. Runtime mode answers which authorit
 
 Public promise: portable reasoning and airgapped transfer are explicit workflows. Results come back for review or apply against the system of record. There is no implied silent reconciliation contract.
 
-For the broader product topology contract, see
-[Context Mobility and Deployment Topologies](context-mobility.md). Self-hosted
-deployments usually sit inside the Hiveram-only or hybrid shapes described
-there; this guide focuses only on the custody and runtime mechanics.
-
-For the concrete operator handoff sequence, see
-[Operator Workflow for Portable Reasoning](operator-workflow.md). That guide
-shows how WO, bundle, and checkpoint rehydration differ, and how shared apply,
-portable reply, and offline receipt flows come back without authority drift.
-
 ## Support boundary
 
 Hiveram supports standard PostgreSQL. The public support contract for customer-hosted deployments is here:
