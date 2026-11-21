@@ -158,7 +158,7 @@ an FK failure, or a relationship mismatch.
 
 ### End-to-end smoke
 
-Use the deterministic smoke kit from the Workledger source repository:
+The smoke kit (`scripts/pg_smoke.sh`) is not in the release package yet. Obsta Labs runs it against your deployment during an evaluation:
 
 ```bash
 # Direct PostgreSQL path: bootstrap + CRUD/search
