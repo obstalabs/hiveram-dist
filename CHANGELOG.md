@@ -2,6 +2,11 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.63.1] - 2026-11-22
+
+### Fixed
+- Internal fix to the deployment tooling of the hosted service. No command, flag, or output changed. (WO-3099)
+
 ## [0.63.0] - 2026-11-21
 
 ### Added
