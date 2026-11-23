@@ -2,6 +2,17 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.63.2] - 2026-11-23
+
+### Fixed
+- Editing a line in place no longer reports its unchanged link to a work order as broken. (WO-3122)
+- The audit command now refuses an output format it cannot produce instead of quietly ignoring the request; its report is always JSON. (WO-3023)
+- An audit report written to a file appears complete or not at all: the report is fully written and flushed to disk before it appears at its destination, an interrupted write can no longer leave a half-written report, and an existing file is never replaced. If the chosen output directory cannot support this guarantee, the command says so and asks for a different directory. (WO-3023)
+- MCP clients see the required fields of the memory and artifact write tools again: storing needs a project, a key and the content, and promoting a draft needs a project and a key. A call that leaves one out is refused before anything is written. (WO-3112)
+
+### Changed
+- Behaviour change (looser): the reason and evidence given with `--authorized-removal` can now contain commas, for example `--authorized-removal 'kind=...,id=...,reason=a, b and c'`. Text after a comma that has no `=` in it belongs to the reason or evidence before it. The kind and id still cannot contain a comma, and text after a comma that contains `=` still starts a new field, so an unknown field name is still refused. When a value is refused, the message now says which part failed and that commas are allowed only inside the reason and evidence. (WO-3116)
+
 ## [0.63.1] - 2026-11-22
 
 ### Fixed
