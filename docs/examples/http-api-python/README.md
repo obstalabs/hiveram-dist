@@ -24,7 +24,7 @@ before sending a bearer credential.
 
 ```bash
 export WORKLEDGER_URL='http://localhost:8080'
-export WORKLEDGER_PROJECT='chainwatch'
+export WORKLEDGER_PROJECT='acme'
 export WORKLEDGER_AGENT_ID='quickstart-agent'
 export WORKLEDGER_AGENT_API_KEY='<agent write token>'
 export WORKLEDGER_REVIEWER_API_KEY='<reviewer write token>'
