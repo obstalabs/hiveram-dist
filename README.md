@@ -63,7 +63,7 @@ curl -fsSL https://raw.githubusercontent.com/obstalabs/hiveram-dist/main/install
 
 This will:
 1. Download the `workledger` binary for your platform
-2. Install public-safe Claude Code skills
+2. Install the Claude Code skills
 3. Configure the MCP server in Claude Code settings
 4. Prompt for your Hiveram/workledger connection details and custody mode
 5. Verify the binary, skills, and startup path for the selected runtime mode
@@ -84,7 +84,7 @@ scoop install workledger
 ## Run the server
 
 The commands above install the CLI. To run the ledger service itself, deploy the
-Helm chart or pull its hardened container image. Both are public: no registry
+Helm chart or pull its container image. Both are public: no registry
 credentials, no account.
 
 The OCI registry is the primary Kubernetes install:
@@ -98,9 +98,9 @@ Namespace, or cluster-scoped resource, and expects an existing Secret holding th
 connection string, licence, and API keys. Start with the
 [self-hosted deployment guide](https://github.com/obstalabs/hiveram-dist/blob/main/docs/self-hosted.md).
 
-The hardened image supports `linux/amd64` and `linux/arm64`. Select its current
+The image supports `linux/amd64` and `linux/arm64`. Select its current
 immutable tag or digest from [Releases](https://github.com/obstalabs/hiveram-dist/releases),
-then verify the runtime guarantees in the
+then check the runtime facts in the
 [container image facts](docs/container-image.md).
 
 For an airgapped or mirrored install, resolve and download the current release
@@ -287,7 +287,7 @@ These skills teach an AI assistant the `workledger` commands. They are written f
 | workledger | `/workledger` | Query, create, update, group, inspect, and hand off work with mode-aware guidance |
 | write-wo | `/write-wo` | Turn a feature brief into one or more well-scoped work orders |
 | load-context | `/load-context` | Orient an agent on the current repo and open work orders |
-| wrapup | `/wrapup` | Close out completed work orders and record delivery evidence |
+| wrapup | `/wrapup` | Hand completed work over for acceptance and record delivery evidence |
 | save-memory | `/save-memory` | Save durable project context through workledger memory surfaces |
 
 ## Platforms
@@ -362,4 +362,4 @@ The canonical public product skill for `workledger` is bundled in this distribut
 
 ## License
 
-Proprietary. This repository distributes Hiveram binaries, installer assets, and public-safe skills only. The Hiveram/workledger source code is private and is not distributed from this repository. See [LICENSE](LICENSE) for the distribution terms.
+Proprietary. This repository distributes Hiveram binaries, installer assets, and the skill pack only. The Hiveram/workledger source code is private and is not distributed from this repository. See [LICENSE](LICENSE) for the distribution terms.
