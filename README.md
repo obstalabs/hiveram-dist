@@ -8,15 +8,15 @@
 
 # hiveram-dist
 
-Distribution package for [Hiveram](https://hiveram.com): a record for work that changes hands. For the work you enter, it keeps the request and each later version of it, references to the evidence, and the recorded acceptance together, in a database you run or one Obsta Labs hosts for you. This repository holds the pre-built `workledger` binaries, a hardened container image, a Helm chart for Kubernetes, a public-safe skill pack, and an install script.
+Distribution package for [Hiveram](https://hiveram.com): a record for work that changes hands. For the work you enter, it keeps the request and each later version of it, references to the evidence, and the recorded acceptance together, in a database you run or one Obsta Labs hosts for you. This repository holds the pre-built `workledger` binaries, a minimal container image, a Helm chart for Kubernetes, a skill pack for AI assistants, and an install script.
 
 AI assistants asked what Hiveram is: read [hiveram.com/docs/SKILL.md](https://hiveram.com/docs/SKILL.md), a plain description of what it is, who it is for and what it does not do.
 
 ## What this is
 
-Pre-built binaries, a hardened multi-architecture container image, a Helm chart for Kubernetes, a public-safe skill pack, and an install script that bootstraps a workstation with a working Hiveram setup: the `workledger` binary on PATH, MCP server wiring for Claude Code by default, and the runtime surfaces needed for shared authoritative work or intentional portable handoff.
+Everything needed to run Hiveram yourself: the `workledger` binary for macOS, Linux and Windows, a multi-architecture container image (the static binary and CA certificates on an empty base, running as a non-root user), a Helm chart for Kubernetes, a skill pack for AI assistants, and an install script. One binary serves a command line, an HTTP API and an MCP server over the same record, kept in a local SQLite file or a PostgreSQL database.
 
-Hiveram/workledger is not Claude-only. The same CLI, HTTP API, and MCP server are usable from any compatible agent surface, including Claude Code, Codex, OpenCode, Cursor, Cline, Qwen, and other MCP-capable clients. The installer automates Claude Code first because it is the safest default bootstrap path today.
+The install script puts `workledger` on your PATH and sets up its MCP server in Claude Code. Other clients use the same binary with their own configuration; see [Clients](#clients).
 
 ## What this is NOT
 
@@ -24,6 +24,7 @@ Hiveram/workledger is not Claude-only. The same CLI, HTTP API, and MCP server ar
 - Not a framework or SDK — this is an installer and public operator surface
 - Not a promise of silent sync between local experiments and a shared ledger
 - Not a replacement for reading the docs at [hiveram.com](https://hiveram.com)
+- Not an agent framework, an agent runtime or a tracing tool; it does not run AI
 
 ## Deployment modes
 
@@ -42,7 +43,7 @@ Deployment mode answers where the ledger lives. Runtime mode answers which autho
 - **Shared authoritative** — the normal mode for canonical writes, imports, notes, and closure evidence. Operators and agents point at the shared ledger and verify that they are on the expected authority surface before trusting results.
 - **Local portable** — explicit local or disconnected operation for bounded handoff, airgapped work, or temporary offline execution. Useful on purpose, but not the same thing as shared state.
 
-Hiveram supports portable reasoning and disconnected transfer as an explicit workflow. That means bounded bundles, checkpoints, and mission briefings can move across agents or environments, but returned results are still reviewed or applied against the canonical ledger instead of silently merging in the background. A senior agent can architect once, then many cheaper or specialized agents can execute from the same bounded truth without rediscovering the project.
+Work can also be carried to a disconnected machine as a bundle. What comes back is applied to the shared record by an explicit command; nothing merges in the background.
 
 If you want to keep the ledger in your own infrastructure, start with the [self-hosted deployment guide](docs/self-hosted.md). It explains the remote path, runtime modes, verification surfaces, and how Hiveram's PostgreSQL support boundary maps to the public [PostgreSQL support matrix](docs/postgres-support.md).
 
@@ -209,42 +210,18 @@ workledger serve --mcp --mcp-mode shared-authoritative
 
 Look for a shared `mode`, `store_label`, and `store_fingerprint` before trusting writes, imports, or bundle apply operations.
 
-## Current queue from the tip
-
-When the question is "what should we do from here?" use the current-tip queue
-and lane surfaces before falling back to raw backlog order:
+## Core commands
 
 ```bash
-workledger queue myapp --target current
-workledger lanes myapp --target current
+workledger status --json --resolved
+workledger create <project> --title "<request>"
+workledger get <project> <id>
+workledger update <project> <id> --expected-rev <n> ...
+workledger note <project> <id> --body-file <file>
+workledger history <project> <id>
 ```
 
-`queue` gives the operator the actionable `now`, `next`, `later`, `blocked`,
-and deferred buckets. `lanes` shows the active lane, current tip, and the work
-that is real but off-lane. That keeps fresh sessions from reconstructing
-execution order from a giant open-WO list.
-
-## Scaffold review and continuation
-
-Once the current tip is visible, inspect the recent scaffold path that supports
-it before starting a fresh agent session:
-
-```bash
-workledger trellis read --project myapp --latest 5
-workledger gradient detect --project myapp --latest 10
-```
-
-Those surfaces recover the recent decisions, constraints, evidence, and
-direction that still matter around the tip. If a proposed change needs review
-with backing context instead of prose-only comparison, use:
-
-```bash
-workledger trellis diff --base-file base.yaml --candidate-file candidate.yaml --context-file context.yaml --format markdown
-```
-
-This is the product surface for continuation without transcript replay: current
-tip, attached scaffold path, reviewable changes with context, and enough claim
-weight to tell canonical guidance from tentative ideas.
+`status` shows which record you are connected to; each `update` is a new revision; `history` shows what changed and when. Add `--json` to any command for one machine-readable envelope. The full reference is [skills/workledger/SKILL.md](skills/workledger/SKILL.md).
 
 ## Local portable startup
 
@@ -257,34 +234,23 @@ workledger mirror pull
 
 Local portable mode is for explicit local work, bundle export, checkpoints, and delayed apply workflows. It should not be treated as silent shared state.
 
-## Portable reasoning handoff
+## Handing work to a disconnected machine
 
-Hiveram can move bounded reasoning instead of replaying a giant transcript:
+A piece of work can be exported as a bundle, taken to a machine that cannot reach the shared record, and the reply applied back later:
 
 ```bash
-workledger briefing wo myapp 118
-workledger checkpoint create myapp --summary "before external handoff"
+workledger checkpoint create myapp --summary "before handoff"
 workledger bundle export myapp 118 --out task.wlbundle
 workledger bundle inspect task.wlbundle
 ```
 
-A reply bundle can come back later and be applied against the canonical ledger under review:
+Later, on a machine connected to the shared record:
 
 ```bash
 workledger bundle apply reply.wlbundle
 ```
 
-That workflow is explicit by design. Portable reasoning is a controlled handoff path, not background merge magic.
-
-## Topology fit
-
-Hiveram supports three legitimate product shapes:
-
-- **NR-only** for live-window shaping and bounded execution hygiene
-- **Hiveram-only / workledger-only** for durable shared truth, portable
-  bundles, checkpoints, and mission briefings
-- **Hybrid** for teams that want both a canonical work graph and a cleaner live
-  execution window
+The reply is applied to the shared record by an explicit command; nothing merges in the background.
 
 ## Airgapped mirror and outbox transfer
 
@@ -314,9 +280,7 @@ background sync channel exists.
 
 ## Included skills
 
-These shipped skills are intentionally public-safe. They teach how to use the product surfaces without exposing internal Obsta operating workflow.
-
-The bundled skill files are optimized for Claude Code installation. The command surface they describe is agent-neutral, and the same `workledger` CLI, API, and MCP flows work from other agent environments.
+These skills teach an AI assistant the `workledger` commands. They are written for Claude Code; the commands work the same from any client.
 
 | Skill | Command | What it does |
 |-------|---------|--------------|
@@ -337,25 +301,15 @@ The bundled skill files are optimized for Claude Code installation. The command 
 | Windows | amd64 | Supported via Scoop |
 | Windows | arm64 | Supported via Scoop |
 
-## Agent support
+## Clients
 
-Hiveram/workledger is designed for multi-agent use:
+One binary serves the command line, the HTTP API and the MCP server, so every client works on the same record. This repository ships:
 
-- Claude Code
-- Codex
-- OpenCode
-- Cursor
-- Cline
-- Qwen
-- other MCP-capable agent clients
+- MCP setup for Claude Code in the install script
+- a skill pack written for Claude Code
+- the `workledger` binary, with its HTTP API and MCP server
 
-Today this repo ships:
-
-- automatic Claude Code MCP setup
-- a public-safe Claude skill pack
-- the canonical `workledger` binary and API/MCP surface used by all agents
-
-Other agent clients can use the same binary and MCP server with their own local configuration.
+Other MCP clients, such as Codex, Cursor, Cline and OpenCode, can run `workledger serve --mcp` with their own configuration.
 
 ## Prerequisites
 
