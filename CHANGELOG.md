@@ -2,6 +2,20 @@
 
 Customer-facing release notes for Hiveram. Downloads for each version are on the [releases page](https://github.com/obstalabs/hiveram-dist/releases).
 
+## [0.64.0] - 2026-11-25
+
+### Added
+- The HTTP API reference now documents who made each history change: every recent-history entry carries an `actor` field naming who made the change, empty for entries recorded before history tracked it (unknown). (WO-3156)
+- Work order history now records who made each change. Every new history entry names the identity that made it: the writer of an update, or the creator of a link between work orders. That name is kept when history is copied to an offline mirror, synced to a hosted ledger, or moved with `migrate-to-postgres`. History in JSON output (CLI, HTTP API and MCP) carries it in a new `actor` field; entries recorded before this release show it empty. (WO-3155)
+
+### Fixed
+- Batch updates and MCP updates now record who made the change instead of the tool's name, so work order history names the acting identity. An explicit writer given to a single MCP update is still recorded as provided. (WO-3158)
+- Finishing a work order no longer clears an unrelated hold on work that depends on it. A work order waiting on an operator decision, an external service or customer, failure fallout, or an authority override stays blocked with its reason intact when a prerequisite finishes; only a block that is genuinely waiting on that prerequisite is lifted, and only once every prerequisite it waits on has finished. When a block is lifted, a note records which work order closed, so the change is never silent. If one dependent work order cannot be updated, the remaining dependents are still processed, every work order that was unblocked keeps its unblock and its notification, and the failure is reported naming the affected work order instead of being dropped. (WO-2302, WO-3143)
+
+### Changed
+- Behaviour change (stricter): a single `--authorized-removal` value may carry at most one `reason=` and one `evidence=`. Giving either field twice in the same value is now refused, and the message names the repeated field and where it appears; before, the second assignment quietly replaced the first, so text you typed could be lost. A reason or evidence that contains commas still works as before, as long as each field appears once. (WO-3126)
+- Behaviour change (stricter): when code that carries a link to its work order is replaced in place, the link must come across unchanged. Rewording its reason now counts as changing the link and needs the same approval as removing it, including when the code keeps its name but its behaviour changed, and however the work order is written. The same now holds when the code is left exactly as it was and only the link's reason is reworded. (WO-3103, WO-3149, WO-3151, WO-3166)
+
 ## [0.63.2] - 2026-11-23
 
 ### Fixed
